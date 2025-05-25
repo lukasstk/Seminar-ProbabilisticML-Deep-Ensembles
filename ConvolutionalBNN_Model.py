@@ -14,9 +14,7 @@ class ConvolutionalBNN:
         self.label_to_index = None
         self.index_to_label = None # is defined in .fit() after class_labels is defined for sure
 
-        # ⚠️ IMPORTANT: change this! seems dumb to recompile the same model
-        self.kl_weight = 1.0 / len_x_train # just a placeholder --> gets recompiled in .fit()
-
+        self.kl_weight = 1.0 / len_x_train
         self.input_shape = input_shape
         self.class_labels = class_labels
         self.num_classes = num_classes
