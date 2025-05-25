@@ -1,7 +1,7 @@
 from imports import *
 
 class ConvolutionalBNN:
-    def __init__(self, input_shape, num_classes, len_x_train,kl_weight=None, class_labels=None):
+    def __init__(self, input_shape, num_classes, len_x_train, class_labels=None):
         """
         Args:
             input_shape: tuple, shape of input images (e.g., (28, 28, 1))
