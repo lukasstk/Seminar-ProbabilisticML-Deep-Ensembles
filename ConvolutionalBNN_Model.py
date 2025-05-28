@@ -28,20 +28,20 @@ class ConvolutionalBNN:
         kl = lambda q, p, _: tfp.distributions.kl_divergence(q, p) * self.kl_weight
 
         model = tfk.Sequential([
-            tfpl.Convolution2DFlipout(32, (3, 3), activation='relu',
+            tfpl.Convolution2DFlipout(filters = 32, kernel_size = (3, 3), activation='relu',
                                       input_shape=self.input_shape, kernel_divergence_fn=kl),
             tfk.layers.MaxPooling2D(pool_size=(2, 2)),
 
-            tfpl.Convolution2DFlipout(64, (3, 3), activation='relu', kernel_divergence_fn=kl),
+            tfpl.Convolution2DFlipout(filters = 64, kernel_size = (3, 3), activation='relu', kernel_divergence_fn=kl),
             tfk.layers.MaxPooling2D(pool_size=(2, 2)),
 
-            tfpl.Convolution2DFlipout(128, (3, 3), activation='relu', kernel_divergence_fn=kl),
+            tfpl.Convolution2DFlipout(filters = 128, kernel_size = (3, 3), activation='relu', kernel_divergence_fn=kl),
             tfk.layers.MaxPooling2D(pool_size=(2, 2)),
 
             tfk.layers.Flatten(),
-            tfpl.DenseFlipout(256, activation='relu', kernel_divergence_fn=kl),
+            tfpl.DenseFlipout(units = 256, activation='relu', kernel_divergence_fn=kl),
             tfk.layers.Dropout(0.3),
-            tfpl.DenseFlipout(128, activation='relu', kernel_divergence_fn=kl),
+            tfpl.DenseFlipout(units = 128, activation='relu', kernel_divergence_fn=kl),
             tfk.layers.Dropout(0.2),
             tfpl.DenseFlipout(self.num_classes, activation=None, kernel_divergence_fn=kl)
         ])

@@ -1,3 +1,5 @@
+import random
+
 from imports import *
 from ConvolutionalBNN_Model import ConvolutionalBNN
 
@@ -57,3 +59,50 @@ acc_ensemble = accuracy_score(y_test, ensemble_predict_classes(ensemble, X_test)
 
 print(f"\nBNN Accuracy: {acc_bnn:.4f}")
 print(f"Ensemble Accuracy: {acc_ensemble:.4f}")
+
+#%% Accuracy Plot
+import matplotlib.pyplot as plt
+
+plt.bar(["BNN", "Ensemble"], [acc_bnn, acc_ensemble], color=["skyblue", "orange"])
+plt.title("Test Accuracy Comparison")
+plt.ylabel("Accuracy")
+plt.ylim(0.9, 1.0)
+plt.grid(axis="y")
+plt.show()
+
+#%% Confusion Matrix for Ensemble and Single
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+
+y_pred = ensemble_predict_classes(ensemble, X_test)
+cm = confusion_matrix(y_test, y_pred)
+disp = ConfusionMatrixDisplay(confusion_matrix=cm)
+disp.plot(cmap="Blues", values_format=".0f")
+plt.title("Ensemble Confusion Matrix")
+plt.show()
+
+y_pred_bnn = bnn.predict_classes(X_test)
+cm_bnn = confusion_matrix(y_test, y_pred_bnn)
+disp_bnn = ConfusionMatrixDisplay(confusion_matrix=cm_bnn)
+disp_bnn.plot(cmap="Purples", values_format=".0f")
+plt.title("Confusion Matrix – Single BNN")
+plt.grid(False)
+plt.show()
+
+#%% Uncertainty Visualization (Entropy of Predictions)
+from scipy.stats import entropy
+from Custom_plot_style import *
+
+probs = ensemble_predict_proba(ensemble, X_test)
+entropy_values = entropy(probs.T)  # shape: (n_samples,)
+
+# Assume entropy_values already computed
+plt.figure(figsize=(10, 6))
+plt.hist(entropy_values, bins=30, color="orchid", edgecolor="black")
+
+plt.title("Prediction Uncertainty (Entropy)")
+plt.xlabel("Entropy")
+plt.ylabel("Number of samples")
+
+apply_custom_plot_style()  # apply the theme
+plt.show()
+
