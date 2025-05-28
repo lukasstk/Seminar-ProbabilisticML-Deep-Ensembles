@@ -49,7 +49,7 @@ num_classes = 10
 # ----- Train a single BNN -----
 bnn = ConvolutionalBNN(input_shape, num_classes, len(X_train))
 bnn.compile()
-bnn.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=2, batch_size=128)
+bnn.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=1, batch_size=128)
 
 ensemble = train_deep_ensemble(X_train, y_train, X_val, y_val, input_shape, num_classes, n_models=5)
 
@@ -106,3 +106,37 @@ plt.ylabel("Number of samples")
 apply_custom_plot_style()  # apply the theme
 plt.show()
 
+#%%
+# Compute and store ensemble accuracies from 1 to 10
+ensemble_accuracies = []
+ensemble_models = []
+
+for i in range(5):
+    print(f"\nTraining model {i+1}/5")
+    model = ConvolutionalBNN(input_shape, num_classes, len(X_train))
+    model.compile()
+    model.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=2, batch_size=64)
+    ensemble_models.append(model)
+
+    y_pred = ensemble_predict_classes(ensemble_models, X_test)
+    acc = accuracy_score(y_test, y_pred)
+    ensemble_accuracies.append(acc)
+
+# Plot the results
+import matplotlib.pyplot as plt
+ensemble_sizes = np.arange(1, 6)
+
+# Include the single model as the first ensemble point
+ensemble_accuracies = [acc_bnn] + ensemble_accuracies  # Prepend single model acc
+ensemble_sizes = np.arange(1, len(ensemble_accuracies) + 1)
+
+plt.figure(figsize=(8, 5))
+plt.plot(ensemble_sizes, ensemble_accuracies, marker='s', label='Ensemble', color='tab:blue')
+plt.hlines(acc_bnn, 1, 5, colors='tab:red', linestyles='--', label='Single Model')
+plt.xlabel("Ensemble size")
+plt.ylabel("Test accuracy")
+plt.title("Test Accuracy vs Ensemble Size")
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.show()

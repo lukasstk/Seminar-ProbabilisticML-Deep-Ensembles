@@ -77,6 +77,7 @@ class ConvolutionalBNN:
 
         if optimizer is None:
             optimizer = "adam"
+
         if loss is None:
             loss = tfk.losses.SparseCategoricalCrossentropy(from_logits=from_logits)
         if metrics is None:
@@ -84,7 +85,7 @@ class ConvolutionalBNN:
 
         self.model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
 
-    def fit(self, X_train, y_train, shuffle_data=True, random_state=None, validation_data=None, **kwargs):
+    def fit(self, X_train, y_train, shuffle_data=True, random_state=None, validation_data=None, verbose=1, **kwargs):
         """
         Train the model.
         Accepts additional arguments like epochs=..., batch_size=..., etc.
@@ -114,7 +115,7 @@ class ConvolutionalBNN:
                 random_state = random.randint(0, 10_000_000)
             X_train, y_train = shuffle(X_train, y_train, random_state=random_state)
 
-        self.model.fit(X_train, y_train, validation_data=validation_data, **kwargs)
+        self.model.fit(X_train, y_train, validation_data=validation_data, verbose=verbose, **kwargs)
 
     def predict_logits(self, X_test):
         """
