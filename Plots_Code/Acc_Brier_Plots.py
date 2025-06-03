@@ -1,5 +1,4 @@
 from Plots_Code.Data_Plots import *
-from imports import *
 
 #%% Plots Accuracy and Brier Score
 # Evaluate single model (first)
@@ -57,7 +56,6 @@ plt.show()
 
 
 #%% Plots NLL and Predictive Entropy
-from imports import *
 # Calculate NLL and Predictive Entropy
 nlls = []
 entropies = []

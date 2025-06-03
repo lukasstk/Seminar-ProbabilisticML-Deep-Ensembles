@@ -101,7 +101,6 @@ plt.title("Prediction Uncertainty (Entropy)")
 plt.xlabel("Entropy")
 plt.ylabel("Number of samples")
 
-apply_custom_plot_style()  # apply the theme
 plt.show()
 
 #%%
