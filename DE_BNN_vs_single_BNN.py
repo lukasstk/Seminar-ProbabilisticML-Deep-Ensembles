@@ -1,5 +1,3 @@
-import random
-
 from imports import *
 from ConvolutionalBNN_Model import ConvolutionalBNN
 
@@ -90,7 +88,7 @@ plt.show()
 
 #%% Uncertainty Visualization (Entropy of Predictions)
 from scipy.stats import entropy
-from Custom_plot_style import *
+from Plots_Code.Custom_plot_style import *
 
 probs = ensemble_predict_proba(ensemble, X_test)
 entropy_values = entropy(probs.T)  # shape: (n_samples,)
