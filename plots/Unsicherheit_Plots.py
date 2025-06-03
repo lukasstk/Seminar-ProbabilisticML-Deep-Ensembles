@@ -1,4 +1,4 @@
-from Plots_Code.Data_Plots import *
+from plots.Data_Plots import *
 
 probs_single = probs_list[0]
 
