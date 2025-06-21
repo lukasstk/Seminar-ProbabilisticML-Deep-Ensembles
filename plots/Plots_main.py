@@ -178,7 +178,7 @@ def plot_ensemble_metrics(df, mfvi_reference):
         apply_custom_theme(ax)
 
         # Save to plots/Saved_Plots
-        filename = f"plots/Saved_Plots/{metric_name.replace(' ', '_').lower()}.pdf"
+        filename = f"plots/Saved_Plots/{metric_name.replace(' ', '_').lower()}.png"
         fig.savefig(filename, bbox_inches="tight", dpi=300)
 
         plt.show()
