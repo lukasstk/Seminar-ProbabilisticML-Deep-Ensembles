@@ -165,7 +165,7 @@ def plot_ensemble_metrics(df, mfvi_reference):
 
     for metric_name in metric_columns:
         values = df[metric_name].tolist()
-        fig, ax = plt.subplots(figsize=(6, 4))
+        fig, ax = plt.subplots(figsize=(12, 6))
         ax.plot(ensemble_sizes, values, marker='o', color='blue', label='DE-BNN', linewidth=2.5, markersize=8)
         ax.axhline(y=mfvi_reference[metric_name], color='red', linestyle='--', label='MFVI-BNN', linewidth=2.5)
         ax.set_xlabel("Ensemble Size")
@@ -176,4 +176,11 @@ def plot_ensemble_metrics(df, mfvi_reference):
         ax.grid(True)
         fig.tight_layout()
         apply_custom_theme(ax)
+
+        # Save to plots/Saved_Plots
+        filename = f"plots/Saved_Plots/{metric_name.replace(' ', '_').lower()}.pdf"
+        fig.savefig(filename, bbox_inches="tight", dpi=300)
+
         plt.show()
+
+plot_ensemble_metrics(df_ensemble_metrics, results_big)
