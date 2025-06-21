@@ -1,6 +1,6 @@
 from imports import *
 
-class ConvolutionalBNN:
+class ConvolutionalBNN_Adversarial_Training :
     def __init__(self, input_shape, num_classes, len_x_train, class_labels=None):
         """
         Args:
@@ -115,7 +115,18 @@ class ConvolutionalBNN:
                 random_state = random.randint(0, 10_000_000)
             X_train, y_train = shuffle(X_train, y_train, random_state=random_state)
 
-        self.model.fit(X_train, y_train, validation_data=validation_data, verbose=verbose, **kwargs)
+        # Generate adversarial examples
+        X_adv = self.generate_adversarial_examples(X_train, y_train, epsilon=0.1)
+
+        # Concatenate clean and adversarial data
+        X_combined = tf.concat([X_train, X_adv], axis=0)
+        y_combined = tf.concat([y_train, y_train], axis=0)
+
+        # Shuffle the combined dataset
+        X_combined, y_combined = shuffle(X_combined.numpy(), y_combined.numpy(), random_state=random_state)
+
+        # Train on the combined dataset
+        self.model.fit(X_combined, y_combined, validation_data=validation_data, verbose=verbose, **kwargs)
 
     def predict_logits(self, X_test):
         """
@@ -123,14 +134,6 @@ class ConvolutionalBNN:
         Shape: (num_samples, num_classes)
         """
         return self.model(X_test, training=False).numpy()
-
-    def predict_proba(self, X_test):
-        """
-        Returns predicted class probabilities (after softmax).
-        Shape: (num_samples, num_classes)
-        """
-        logits = self.predict_logits(X_test)
-        return tf.nn.softmax(logits, axis=-1).numpy()
 
     def predict_classes(self, X_test):
         """
@@ -151,3 +154,16 @@ class ConvolutionalBNN:
             y_test = [self.index_to_label[int(i)] for i in y_test]
 
         return accuracy_score(y_test, y_pred)
+
+    def generate_adversarial_examples(self, X, y, epsilon=0.1):
+        X = tf.convert_to_tensor(X)
+        y = tf.convert_to_tensor(y)
+
+        with tf.GradientTape() as tape:
+            tape.watch(X)
+            predictions = self.model(X, training=True)
+            loss = tfk.losses.sparse_categorical_crossentropy(y, predictions, from_logits=True)
+        gradient = tape.gradient(loss, X)
+        signed_grad = tf.sign(gradient)
+        X_adv = X + epsilon * signed_grad
+        return tf.clip_by_value(X_adv, 0.0, 1.0)  # Keep pixel values valid

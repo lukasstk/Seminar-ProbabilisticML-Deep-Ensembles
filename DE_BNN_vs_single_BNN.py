@@ -137,3 +137,116 @@ plt.legend()
 plt.grid(True)
 plt.tight_layout()
 plt.show()
+
+#%% Fair Coputational Time
+from imports import *
+from ConvolutionalBNN_Model import ConvolutionalBNN
+import matplotlib.pyplot as plt
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+from scipy.stats import entropy
+from plots.Custom_plot_style import *
+
+#%% Big BNN with more capacity (simulates 5× resources)
+class BigConvolutionalBNN(ConvolutionalBNN):
+    def _build_model(self):
+        kl = lambda q, p, _: tfp.distributions.kl_divergence(q, p) * self.kl_weight
+        model = tfk.Sequential([
+            tfpl.Convolution2DFlipout(64, (3, 3), activation='relu', input_shape=self.input_shape, kernel_divergence_fn=kl),
+            tfk.layers.MaxPooling2D((2, 2)),
+            tfpl.Convolution2DFlipout(128, (3, 3), activation='relu', kernel_divergence_fn=kl),
+            tfk.layers.MaxPooling2D((2, 2)),
+            tfpl.Convolution2DFlipout(256, (3, 3), activation='relu', kernel_divergence_fn=kl),
+            tfk.layers.MaxPooling2D((2, 2)),
+            tfk.layers.Flatten(),
+            tfpl.DenseFlipout(512, activation='relu', kernel_divergence_fn=kl),
+            tfk.layers.Dropout(0.3),
+            tfpl.DenseFlipout(256, activation='relu', kernel_divergence_fn=kl),
+            tfk.layers.Dropout(0.2),
+            tfpl.DenseFlipout(self.num_classes, activation=None, kernel_divergence_fn=kl)
+        ])
+        return model
+
+#%% Train Deep Ensemble of BNNs
+def train_deep_ensemble(X_train, y_train, X_val, y_val, input_shape, num_classes, n_models, class_labels=None):
+    ensemble_models = []
+    for i in range(n_models):
+        print(f"\nTraining model {i+1}/{n_models}")
+        model = ConvolutionalBNN(input_shape, num_classes, len(X_train), class_labels=class_labels)
+        model.compile()
+        model.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=2, batch_size=64, verbose=1)
+        ensemble_models.append(model)
+    return ensemble_models
+
+#%% Ensemble Prediction (softmax averaging)
+def ensemble_predict_logits(ensemble, X):
+    all_logits = [model.predict_logits(X) for model in ensemble]
+    return np.stack(all_logits, axis=0)
+
+def ensemble_predict_proba(ensemble, X):
+    logits = ensemble_predict_logits(ensemble, X)
+    probs = tf.nn.softmax(logits, axis=-1).numpy()
+    return np.mean(probs, axis=0)
+
+def ensemble_predict_classes(ensemble, X):
+    probs = ensemble_predict_proba(ensemble, X)
+    return np.argmax(probs, axis=1)
+
+#%% Load MNIST
+(X_train, y_train), (X_test, y_test) = tf.keras.datasets.mnist.load_data()
+X_train = X_train.astype("float32") / 255.
+X_test = X_test.astype("float32") / 255.
+X_train = X_train[..., np.newaxis]
+X_test = X_test[..., np.newaxis]
+X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.1, random_state=42)
+
+input_shape = (28, 28, 1)
+num_classes = 10
+
+#%% Train large BNN (single model, 5× capacity)
+print("\nTraining Big BNN (equal parameter budget to ensemble)")
+bnn_big = BigConvolutionalBNN(input_shape, num_classes, len(X_train))
+bnn_big.compile()
+bnn_big.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=2, batch_size=64)
+
+#%% Train Deep Ensemble (5× small models)
+ensemble = train_deep_ensemble(X_train, y_train, X_val, y_val, input_shape, num_classes, n_models=5)
+
+#%% Accuracy Comparison
+acc_big = bnn_big.evaluate_accuracy(X_test, y_test)
+acc_ensemble = accuracy_score(y_test, ensemble_predict_classes(ensemble, X_test))
+
+print(f"\nBig BNN Accuracy:     {acc_big:.4f}")
+print(f"Ensemble Accuracy:    {acc_ensemble:.4f}")
+
+#%% Accuracy Bar Plot
+plt.bar(["Big BNN", "Ensemble"], [acc_big, acc_ensemble], color=["skyblue", "orange"])
+plt.title("Test Accuracy Comparison (Equal Budget)")
+plt.ylabel("Accuracy")
+plt.ylim(0.9, 1.0)
+plt.grid(axis="y")
+plt.show()
+
+#%% Confusion Matrices
+y_pred_ens = ensemble_predict_classes(ensemble, X_test)
+cm_ens = confusion_matrix(y_test, y_pred_ens)
+ConfusionMatrixDisplay(cm_ens).plot(cmap="Blues", values_format=".0f")
+plt.title("Ensemble Confusion Matrix")
+plt.show()
+
+y_pred_big = bnn_big.predict_classes(X_test)
+cm_big = confusion_matrix(y_test, y_pred_big)
+ConfusionMatrixDisplay(cm_big).plot(cmap="Purples", values_format=".0f")
+plt.title("Confusion Matrix – Big BNN")
+plt.grid(False)
+plt.show()
+
+#%% Entropy Visualization
+probs_ens = ensemble_predict_proba(ensemble, X_test)
+entropy_values = entropy(probs_ens.T)
+
+plt.figure(figsize=(10, 6))
+plt.hist(entropy_values, bins=30, color="orchid", edgecolor="black")
+plt.title("Prediction Uncertainty (Entropy)")
+plt.xlabel("Entropy")
+plt.ylabel("Number of samples")
+plt.show()

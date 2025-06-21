@@ -1,5 +1,5 @@
 from plots.Data_Plots import *
-
+from matplotlib import pyplot as plt
 probs_single = probs_list[0]
 
 # Prepare data

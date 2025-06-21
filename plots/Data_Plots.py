@@ -2,10 +2,9 @@ from imports import *
 from ConvolutionalBNN_Model import ConvolutionalBNN
 
 import numpy as np
-import matplotlib.pyplot as plt
-from sklearn.metrics import accuracy_score, brier_score_loss
 
-# Load CIFAR-10
+
+# Load MNIST
 (x_train_full, y_train_full), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
 y_train_full = y_train_full.flatten()
 y_test = y_test.flatten()

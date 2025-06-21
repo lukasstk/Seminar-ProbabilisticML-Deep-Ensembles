@@ -1,18 +1,16 @@
 from imports import *
 
-class ConvolutionalBNN:
+class BNN:
     def __init__(self, input_shape, num_classes, len_x_train, class_labels=None):
         """
         Args:
-            input_shape: tuple, shape of input images (e.g., (28, 28, 1))
-            kl_weight: float, scaling factor for KL divergence regularization
+            input_shape: tuple, shape of input features (e.g., (11,) for wine dataset)
             num_classes: int, number of output classes (e.g., 10)
-            class_labels: list, optional list mapping indices to class labels (e.g., [1,2,...,11] or ["cat", "dog", ...])
-            len_x_train: int, length of x_train (trainigset)
+            len_x_train: int, number of training examples (used to scale KL divergence)
+            class_labels: list, optional list mapping indices to class labels (e.g., [3,4,...,8])
         """
-
         self.label_to_index = None
-        self.index_to_label = None # is defined in .fit() after class_labels is defined for sure
+        self.index_to_label = None  # is defined in .fit() after class_labels is defined for sure
 
         self.kl_weight = 1.0 / len_x_train
         self.input_shape = input_shape
@@ -22,27 +20,24 @@ class ConvolutionalBNN:
 
     def _build_model(self):
         """
-        Build a convolutional BNN using Flipout layers and KL divergence regularization.
+        Build a fully-connected BNN using Flipout layers and KL divergence regularization.
+        This is adapted for tabular data, not images.
         """
 
         kl = lambda q, p, _: tfp.distributions.kl_divergence(q, p) * self.kl_weight
 
         model = tfk.Sequential([
-            tfpl.Convolution2DFlipout(filters = 32, kernel_size = (3, 3), activation='relu',
-                                      input_shape=self.input_shape, kernel_divergence_fn=kl),
-            tfk.layers.MaxPooling2D(pool_size=(2, 2)),
+            tfk.Input(shape=self.input_shape),
 
-            tfpl.Convolution2DFlipout(filters = 64, kernel_size = (3, 3), activation='relu', kernel_divergence_fn=kl),
-            tfk.layers.MaxPooling2D(pool_size=(2, 2)),
+            tfpl.DenseFlipout(32, activation='relu', kernel_divergence_fn=kl),
+            tfpl.DenseFlipout(64, activation='relu', kernel_divergence_fn=kl),
+            tfpl.DenseFlipout(128, activation='relu', kernel_divergence_fn=kl),
 
-            tfpl.Convolution2DFlipout(filters = 128, kernel_size = (3, 3), activation='relu', kernel_divergence_fn=kl),
-            tfk.layers.MaxPooling2D(pool_size=(2, 2)),
-
-            tfk.layers.Flatten(),
-            tfpl.DenseFlipout(units = 256, activation='relu', kernel_divergence_fn=kl),
+            tfpl.DenseFlipout(256, activation='relu', kernel_divergence_fn=kl),
             tfk.layers.Dropout(0.3),
-            tfpl.DenseFlipout(units = 128, activation='relu', kernel_divergence_fn=kl),
+            tfpl.DenseFlipout(128, activation='relu', kernel_divergence_fn=kl),
             tfk.layers.Dropout(0.2),
+
             tfpl.DenseFlipout(self.num_classes, activation=None, kernel_divergence_fn=kl)
         ])
         return model
@@ -95,8 +90,8 @@ class ConvolutionalBNN:
         if self.class_labels is None:
             self.class_labels = sorted(set(y_train))
 
-        self.index_to_label = {i: label for i, label in enumerate(self.class_labels)} # index -> label
-        self.label_to_index = {label: i for i, label in self.index_to_label.items()} # label -> index
+        self.index_to_label = {i: label for i, label in enumerate(self.class_labels)}  # index -> label
+        self.label_to_index = {label: i for i, label in self.index_to_label.items()}    # label -> index
 
         # Convert y_train to integer indices
         if isinstance(y_train[0], str):
@@ -123,14 +118,6 @@ class ConvolutionalBNN:
         Shape: (num_samples, num_classes)
         """
         return self.model(X_test, training=False).numpy()
-
-    def predict_proba(self, X_test):
-        """
-        Returns predicted class probabilities (after softmax).
-        Shape: (num_samples, num_classes)
-        """
-        logits = self.predict_logits(X_test)
-        return tf.nn.softmax(logits, axis=-1).numpy()
 
     def predict_classes(self, X_test):
         """

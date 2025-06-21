@@ -1,3 +1,5 @@
+from sklearn.metrics import brier_score_loss
+from matplotlib import pyplot as plt
 from plots.Data_Plots import *
 
 #%% Plots Accuracy and Brier Score
@@ -73,6 +75,7 @@ entropy_single = np.mean(entropy(probs_single.T))
 
 # Plot
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
 
 # NLL plot
 ax1.plot(ensemble_sizes, nlls, label="Ensemble", marker='o')
