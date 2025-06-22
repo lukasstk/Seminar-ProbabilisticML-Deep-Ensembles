@@ -18,10 +18,10 @@ def apply_custom_theme(ax):
  # Linien an den Zwischenpositionen (nur eine pro Intervall)
  for i in range(len(yticks) - 1):
   y_mid = (yticks[i] + yticks[i + 1]) / 2
-  ax.axhline(y=y_mid, color='gray', linewidth=0.2, linestyle='-', alpha=0.4)
+  ax.axhline(y=y_mid, color='gray', linewidth=0.2, linestyle='-', alpha=0.2)
  for i in range(len(xticks) - 1):
   x_mid = (xticks[i] + xticks[i + 1]) / 2
-  ax.axvline(x=x_mid, color='gray', linewidth=0.2, linestyle='-', alpha=0.4)
+  ax.axvline(x=x_mid, color='gray', linewidth=0.2, linestyle='-', alpha=0.2)
 
  # Formatierung wie gehabt
  ax.set_xlabel(ax.get_xlabel() or "x-axis", fontsize=32, labelpad=20)

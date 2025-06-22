@@ -3,7 +3,13 @@ from ConvolutionalBNN_Model import ConvolutionalBNN
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 import pandas as pd
+import time
 from matplotlib import pyplot as plt
+
+seed = 42
+random.seed(seed)
+np.random.seed(seed)
+tf.random.set_seed(seed)
 
 #%% Angepasste Klasse für großes BNN
 class BigConvolutionalBNN(ConvolutionalBNN):
@@ -88,32 +94,62 @@ def evaluate_model(y_true, y_proba, num_classes=10):
         "ECE": ece_val
     }
 
-#%% Load and prepare MNIST
-(x_train_full, y_train_full), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
+#%% Load MNIST or CIFAR-10 and apply preprocessing
+(x_train_full, y_train_full), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
+# (x_train_full, y_train_full), (x_test, y_test) = tf.keras.datasets.mnist.load_data()  # Uncomment if using MNIST
+
+# Normalize pixel values
 x_train_full = x_train_full.astype("float32") / 255.0
 x_test = x_test.astype("float32") / 255.0
-x_train_full = x_train_full[..., np.newaxis]
-x_test = x_test[..., np.newaxis]
+
+# Detect dataset type based on image shape and adjust channels
+if x_train_full.shape[1:] == (28, 28):  # MNIST
+    x_train_full = x_train_full[..., np.newaxis]
+    x_test = x_test[..., np.newaxis]
+    input_shape = (28, 28, 1)
+elif x_train_full.shape[1:] == (32, 32, 3):  # CIFAR-10
+    input_shape = (32, 32, 3)
+else:
+    raise ValueError("Unrecognized dataset shape: {}".format(x_train_full.shape[1:]))
+
+# Flatten labels
 y_train_full = y_train_full.flatten()
 y_test = y_test.flatten()
 
-x_train, x_val, y_train, y_val = train_test_split(x_train_full, y_train_full, test_size=0.1, random_state=42)
-input_shape = (28, 28, 1)
-num_classes = 10
+# Split into train and validation sets
+x_train, x_val, y_train, y_val = train_test_split(x_train_full, y_train_full, test_size=0.2, random_state=seed)
+num_classes = len(np.unique(y_train_full))
 
-#%% Train MFVI-BNN
+"""print("\nTraining Single-BNN:")
+single_bnn = ConvolutionalBNN(input_shape, num_classes, len(x_train))
+single_bnn.compile()
+single_bnn.fit(x_train, y_train, validation_data=(x_val, y_val), epochs=10, batch_size=64)"""
+
+"""#%% Train MFVI-BNN
 print("\nTraining Large BNN-VI:")
 bnn_big = BigConvolutionalBNN(input_shape, num_classes, len(x_train))
 bnn_big.compile()
-bnn_big.fit(x_train, y_train, validation_data=(x_val, y_val), epochs=2, batch_size=64)
+bnn_big.fit(x_train, y_train, validation_data=(x_val, y_val), epochs=20, batch_size=64)"""
+
+"""start1 = time.time()
+bnn_big.fit(x_train, y_train, validation_data=(x_val, y_val), epochs=1, batch_size=64)
+print("Time elapsed:", time.time() - start1)
+
+single_ensemble = ConvolutionalBNN(input_shape, num_classes, len(x_train))
+single_ensemble.compile()
+
+start2 = time.time()
+single_ensemble.fit(x_train, y_train, validation_data=(x_val, y_val), epochs=1)
+print("Time elapsed:", time.time() - start2)"""
+
 
 #%% Train DE-BNN
-ensemble = train_deep_ensemble(x_train, y_train, x_val, y_val, input_shape, num_classes, n_models=10)
+ensemble = train_deep_ensemble(x_train, y_train, x_val, y_val, input_shape, num_classes, n_models=5)
 
 #%% Evaluate both models
-print("\nEvaluating Large BNN-VI")
-y_proba_big = bnn_big.predict_proba(x_test)
-results_big = evaluate_model(y_test, y_proba_big)
+"""print("\nEvaluating Single-BNN")
+y_proba_single = ensemble[0].predict_proba(x_test)
+results_single = evaluate_model(y_test, y_proba_single)"""
 
 print("\nEvaluating DE-BNN")
 y_proba_de = ensemble_predict_proba(ensemble, x_test)
@@ -121,7 +157,7 @@ results_de = evaluate_model(y_test, y_proba_de)
 
 #%% Print comparison
 results_df = pd.DataFrame({
-    "MFVI-BNN": results_big,
+    """"Single-BNN": results_single,"""
     "DE-BNN": results_de
 })
 print("\nComparison of Evaluation Metrics:")
@@ -144,30 +180,30 @@ for k in range(1, len(ensemble) + 1):
 df_ensemble_metrics = pd.DataFrame(results_per_size)
 print(df_ensemble_metrics)
 
-def plot_ensemble_metrics(df, mfvi_reference):
+def plot_ensemble_metrics(ensemble, single):
     """
-    Plots evaluation metrics vs. ensemble size from a DataFrame and compares them to a fixed MFVI-BNN baseline.
+    Plots evaluation metrics vs. ensemble size from a DataFrame and compares them to a fixed BNN baseline.
 
     Parameters:
     -----------
-    df : pd.DataFrame
+    ensemble : pd.DataFrame
         Must contain columns:
         - "Ensemble Size"
         - "Accuracy", "NLL", "Brier Score", "Predictive Entropy", "ECE"
 
-    mfvi_reference : dict
-        Reference metric values from a single MFVI-BNN model. Keys must match column names in df.
+    single : dict
+        Reference metric values from a single BNN model. Keys must match column names in df.
     """
-    ensemble_sizes = df["Ensemble Size"].tolist()
+    ensemble_sizes = ensemble["Ensemble Size"].tolist()
 
     # Automatically detect metric columns (exclude "Ensemble Size")
-    metric_columns = [col for col in df.columns if col != "Ensemble Size"]
+    metric_columns = [col for col in ensemble.columns if col != "Ensemble Size"]
 
     for metric_name in metric_columns:
-        values = df[metric_name].tolist()
+        values = ensemble[metric_name].tolist()
         fig, ax = plt.subplots(figsize=(12, 6))
         ax.plot(ensemble_sizes, values, marker='o', color='blue', label='DE-BNN', linewidth=2.5, markersize=8)
-        ax.axhline(y=mfvi_reference[metric_name], color='red', linestyle='--', label='MFVI-BNN', linewidth=2.5)
+        ax.axhline(y=single[metric_name], color='red', linestyle='--', label='Single-BNN', linewidth=2.5)
         ax.set_xlabel("Ensemble Size")
         ax.set_ylabel(metric_name)
         ax.set_title(f"{metric_name} vs. Ensemble Size")
@@ -183,4 +219,4 @@ def plot_ensemble_metrics(df, mfvi_reference):
 
         plt.show()
 
-plot_ensemble_metrics(df_ensemble_metrics, results_big)
+plot_ensemble_metrics(df_ensemble_metrics, df_ensemble_metrics.iloc[0,:])

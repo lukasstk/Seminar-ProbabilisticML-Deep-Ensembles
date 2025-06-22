@@ -25,9 +25,17 @@ class ConvolutionalBNN:
         Build a convolutional BNN using Flipout layers and KL divergence regularization.
         """
 
+        data_augmentation = tfk.Sequential([
+            tfk.layers.RandomRotation(0.1),
+            tfk.layers.RandomTranslation(0.1, 0.1),
+        ])
+
         kl = lambda q, p, _: tfp.distributions.kl_divergence(q, p) * self.kl_weight
 
         model = tfk.Sequential([
+
+            data_augmentation,
+
             tfpl.Convolution2DFlipout(filters = 32, kernel_size = (3, 3), activation='relu',
                                       input_shape=self.input_shape, kernel_divergence_fn=kl),
             tfk.layers.MaxPooling2D(pool_size=(2, 2)),
