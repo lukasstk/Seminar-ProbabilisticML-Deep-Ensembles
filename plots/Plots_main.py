@@ -5,6 +5,9 @@ from sklearn.metrics import accuracy_score
 import pandas as pd
 import time
 from matplotlib import pyplot as plt
+from netcal.metrics import ECE
+from sklearn.metrics import brier_score_loss
+from Save_and_Load_Models import save_bnn_model, load_bnn_model
 
 seed = 42
 random.seed(seed)
@@ -51,16 +54,11 @@ def ensemble_predict_classes(ensemble, X):
     probs = ensemble_predict_proba(ensemble, X)
     return np.argmax(probs, axis=1)
 
-#%% Evaluation Utilities
-def brier_score(y_true, y_proba, num_classes):
-    y_true_one_hot = tf.one_hot(y_true, depth=num_classes)
-    return tf.reduce_mean(tf.reduce_sum(tf.square(y_proba - y_true_one_hot), axis=1)).numpy()
-
 def predictive_entropy(y_proba):
     dist = tfp.distributions.Categorical(probs=y_proba)
     return tf.reduce_mean(dist.entropy()).numpy()
 
-def expected_calibration_error(y_true, y_proba, n_bins=10):
+"""def expected_calibration_error(y_true, y_proba, n_bins=10):
     confidences = tf.reduce_max(y_proba, axis=1)
     predictions = tf.argmax(y_proba, axis=1, output_type=tf.int32)
     accuracies = tf.cast(tf.equal(predictions, y_true), tf.float32)
@@ -71,21 +69,26 @@ def expected_calibration_error(y_true, y_proba, n_bins=10):
     for i in range(n_bins):
         bin_lower = bin_boundaries[i]
         bin_upper = bin_boundaries[i + 1]
-        in_bin = tf.logical_and(confidences > bin_lower, confidences <= bin_upper)
+        if i == 0:
+            in_bin = tf.logical_and(confidences >= bin_lower, confidences <= bin_upper)
+        else:
+            in_bin = tf.logical_and(confidences > bin_lower, confidences <= bin_upper)
         prop_in_bin = tf.reduce_mean(tf.cast(in_bin, tf.float32))
         if prop_in_bin > 0:
             accuracy_in_bin = tf.reduce_mean(tf.boolean_mask(accuracies, in_bin))
             avg_confidence_in_bin = tf.reduce_mean(tf.boolean_mask(confidences, in_bin))
             ece += tf.abs(avg_confidence_in_bin - accuracy_in_bin) * prop_in_bin
-    return ece.numpy()
+    return ece.numpy()"""
 
 def evaluate_model(y_true, y_proba, num_classes=10):
     y_pred = np.argmax(y_proba, axis=1)
     acc = accuracy_score(y_true, y_pred)
     nll = tf.keras.losses.SparseCategoricalCrossentropy()(y_true, y_proba).numpy()
-    brier = brier_score(y_true, y_proba, num_classes)
+    brier = brier_score_loss(y_true, y_proba, scale_by_half=False)
     entropy_val = predictive_entropy(y_proba)
-    ece_val = expected_calibration_error(y_true, y_proba)
+
+    ece = ECE(bins=num_classes)
+    ece_val = ece.measure(y_proba, y_true)
     return {
         "Accuracy": acc,
         "NLL": nll,
@@ -95,8 +98,8 @@ def evaluate_model(y_true, y_proba, num_classes=10):
     }
 
 #%% Load MNIST or CIFAR-10 and apply preprocessing
-(x_train_full, y_train_full), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
-# (x_train_full, y_train_full), (x_test, y_test) = tf.keras.datasets.mnist.load_data()  # Uncomment if using MNIST
+#(x_train_full, y_train_full), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
+(x_train_full, y_train_full), (x_test, y_test) = tf.keras.datasets.mnist.load_data()  # Uncomment if using MNIST
 
 # Normalize pixel values
 x_train_full = x_train_full.astype("float32") / 255.0
@@ -146,6 +149,7 @@ print("Time elapsed:", time.time() - start2)"""
 #%% Train DE-BNN
 ensemble = train_deep_ensemble(x_train, y_train, x_val, y_val, input_shape, num_classes, n_models=5)
 
+
 #%% Evaluate both models
 """print("\nEvaluating Single-BNN")
 y_proba_single = ensemble[0].predict_proba(x_test)
@@ -162,7 +166,6 @@ results_df = pd.DataFrame({
 })
 print("\nComparison of Evaluation Metrics:")
 print(results_df)
-
 
 # 1. Get predicted probabilities from each ensemble model
 probs_list = [model.predict_proba(x_test) for model in ensemble]
@@ -220,3 +223,9 @@ def plot_ensemble_metrics(ensemble, single):
         plt.show()
 
 plot_ensemble_metrics(df_ensemble_metrics, df_ensemble_metrics.iloc[0,:])
+
+save_bnn_model(ensemble[0], "Ensemble_Member_1")
+save_bnn_model(ensemble[1], "Ensemble_Member_2")
+save_bnn_model(ensemble[2], "Ensemble_Member_3")
+save_bnn_model(ensemble[3], "Ensemble_Member_4")
+save_bnn_model(ensemble[4], "Ensemble_Member_5")

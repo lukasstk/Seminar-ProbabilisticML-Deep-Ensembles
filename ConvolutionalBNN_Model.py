@@ -1,7 +1,7 @@
 from imports import *
 
 class ConvolutionalBNN:
-    def __init__(self, input_shape, num_classes, len_x_train, class_labels=None):
+    def __init__(self, input_shape, num_classes, len_x_train, class_labels=None, seed=42):
         """
         Args:
             input_shape: tuple, shape of input images (e.g., (28, 28, 1))
@@ -19,6 +19,10 @@ class ConvolutionalBNN:
         self.class_labels = class_labels
         self.num_classes = num_classes
         self.model = self._build_model()
+
+        # Seed for deterministic Sampling
+        self.seed = seed
+        self.seed_stream = tfp.util.SeedStream(seed=seed, salt="flipout")
 
     def _build_model(self):
         """
@@ -139,6 +143,31 @@ class ConvolutionalBNN:
         """
         logits = self.predict_logits(X_test)
         return tf.nn.softmax(logits, axis=-1).numpy()
+
+    def predict_proba_mc(self, X_test, mc_samples=30, use_seed=True):
+        """
+        Predicts class probabilities by averaging over multiple stochastic forward passes.
+
+        Args:
+            X_test : np.ndarray
+                Test data
+            mc_samples : int
+                Number of MC samples
+            use_seed : bool
+                Whether to use internal self.seed_stream (for determinism)
+
+        Returns:
+            np.ndarray
+                Averaged predicted class probabilities
+        """
+        probas = []
+        for _ in range(mc_samples):
+            if use_seed and self.seed_stream is not None:
+                tf.random.set_seed(self.seed_stream())
+            logits = self.model(X_test, training=False).numpy()
+            probs = tf.nn.softmax(logits, axis=-1).numpy()
+            probas.append(probs)
+        return np.mean(probas, axis=0)
 
     def predict_classes(self, X_test):
         """
