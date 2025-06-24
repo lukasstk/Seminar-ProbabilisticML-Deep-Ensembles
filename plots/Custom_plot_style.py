@@ -37,7 +37,7 @@ def apply_custom_theme(ax):
 # Zeige nur jede zweite y-Beschriftung (aber behalte alle Grid-Linien!)
  all_yticks = ax.get_yticks()
  ax.set_yticklabels([
-     f"{tick:.4f}" if i % 2 == 0 else ""
+     f"{tick:.2f}" if i % 2 == 0 else ""
      for i, tick in enumerate(all_yticks)
  ])
 

@@ -98,8 +98,8 @@ def evaluate_model(y_true, y_proba, num_classes=10):
     }
 
 #%% Load MNIST or CIFAR-10 and apply preprocessing
-(x_train_full, y_train_full), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
-#(x_train_full, y_train_full), (x_test, y_test) = tf.keras.datasets.mnist.load_data()  # Uncomment if using MNIST
+#(x_train_full, y_train_full), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
+(x_train_full, y_train_full), (x_test, y_test) = tf.keras.datasets.mnist.load_data()  # Uncomment if using MNIST
 
 # Normalize pixel values
 x_train_full = x_train_full.astype("float32") / 255.0
@@ -123,17 +123,17 @@ y_test = y_test.flatten()
 x_train, x_val, y_train, y_val = train_test_split(x_train_full, y_train_full, test_size=0.2, random_state=seed)
 num_classes = len(np.unique(y_train_full))
 
-#ensemble = []
+ensemble = []
 """ensemble.append(load_bnn_model("Ensemble_Member_1", len_x_train=len(x_train_full)))
 ensemble.append(load_bnn_model("Ensemble_Member_2", len_x_train=len(x_train_full)))
 ensemble.append(load_bnn_model("Ensemble_Member_3", len_x_train=len(x_train_full)))
 ensemble.append(load_bnn_model("Ensemble_Member_4", len_x_train=len(x_train_full)))
 ensemble.append(load_bnn_model("Ensemble_Member_5", len_x_train=len(x_train_full)))"""
 
-"""ensemble = [
-    load_bnn_model(f"Ensemble_Member_{i+1}", len_x_train=len(x_train_full))
+ensemble = [
+    load_bnn_model(f"Ensemble_Member_{i+1}_MNIST", len_x_train=len(x_train_full))
     for i in range(5)
-]"""
+]
 
 """print("\nTraining Single-BNN:")
 single_bnn = ConvolutionalBNN(input_shape, num_classes, len(x_train))
@@ -159,7 +159,7 @@ print("Time elapsed:", time.time() - start2)"""
 
 
 #%% Train DE-BNN
-ensemble = train_deep_ensemble(x_train, y_train, x_val, y_val, input_shape, num_classes, n_models=5)
+# ensemble = train_deep_ensemble(x_train, y_train, x_val, y_val, input_shape, num_classes, n_models=5)
 
 
 #%% Evaluate both models
@@ -212,20 +212,33 @@ def plot_ensemble_metrics(ensemble, single, mnist=True):
     mnist : bool (default=True)
         If True, filenames end with "_MNIST.png", otherwise "_CIFAR10.png"
     """
+    import matplotlib.ticker as mtick
+
     ensemble_sizes = ensemble["Ensemble Size"].tolist()
     metric_columns = [col for col in ensemble.columns if col != "Ensemble Size"]
-
     suffix = "_MNIST.png" if mnist else "_CIFAR10.png"
 
     for metric_name in metric_columns:
         values = ensemble[metric_name].tolist()
+        single_value = single[metric_name]
+
+        is_percent_metric = metric_name == "Accuracy"  # ✅ Only Accuracy is shown in %
+        if is_percent_metric:
+            values = [v * 100 for v in values]
+            single_value *= 100
+
         fig, ax = plt.subplots(figsize=(12, 6))
         ax.plot(ensemble_sizes, values, marker='o', color='blue', label='DE-BNN', linewidth=2.5, markersize=8)
-        ax.axhline(y=single[metric_name], color='red', linestyle='--', label='Single-BNN', linewidth=2.5)
+        ax.axhline(y=single_value, color='red', linestyle='--', label='Single-BNN', linewidth=2.5)
         ax.set_xlabel("Ensemble Size")
-        ax.set_ylabel(metric_name)
+        ylabel = f"{metric_name} (%)" if is_percent_metric else metric_name
+        ax.set_ylabel(ylabel)
         ax.set_title(f"{metric_name} vs. Ensemble Size")
         ax.set_xticks(ensemble_sizes)
+
+        if is_percent_metric:
+            ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.2f%%'))
+
         ax.legend(fontsize=20)
         ax.grid(True)
         fig.tight_layout()
@@ -237,10 +250,13 @@ def plot_ensemble_metrics(ensemble, single, mnist=True):
 
         plt.show()
 
-plot_ensemble_metrics(df_ensemble_metrics, df_ensemble_metrics.iloc[0,:], mnist=False)
 
-save_bnn_model(ensemble[0], "Ensemble_Member_1_CIFAR10")
+
+
+plot_ensemble_metrics(df_ensemble_metrics, df_ensemble_metrics.iloc[0,:], mnist=True)
+
+"""save_bnn_model(ensemble[0], "Ensemble_Member_1_CIFAR10")
 save_bnn_model(ensemble[1], "Ensemble_Member_2_CIFAR10")
 save_bnn_model(ensemble[2], "Ensemble_Member_3_CIFAR10")
 save_bnn_model(ensemble[3], "Ensemble_Member_4_CIFAR10")
-save_bnn_model(ensemble[4], "Ensemble_Member_5_CIFAR10")
+save_bnn_model(ensemble[4], "Ensemble_Member_5_CIFAR10")"""
