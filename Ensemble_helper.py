@@ -4,6 +4,7 @@ from sklearn.metrics import accuracy_score
 from netcal.metrics import ECE
 from sklearn.metrics import brier_score_loss
 from tensorflow.keras.callbacks import EarlyStopping
+from scipy.stats import entropy
 
 #%% Angepasste Klasse für CIFAR-10 BNN
 class BigConvolutionalBNN(ConvolutionalBNN):
@@ -69,8 +70,7 @@ def ensemble_predict_classes(ensemble, X):
     return np.argmax(probs, axis=1)
 
 def predictive_entropy(y_proba):
-    dist = tfp.distributions.Categorical(probs=y_proba)
-    return tf.reduce_mean(dist.entropy()).numpy()
+    return entropy(y_proba.T).mean()
 
 def evaluate_model(y_true, y_proba, num_classes=10):
     y_pred = np.argmax(y_proba, axis=1)
