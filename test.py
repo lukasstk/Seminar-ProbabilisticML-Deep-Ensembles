@@ -115,9 +115,9 @@ entropy_ood    = df_ensemble_metrics_ood["Predictive Entropy"].tolist()    # OOD
 fig, ax = plt.subplots(figsize=(12, 6))
 
 ax.plot(ensemble_sizes, entropy_id,  marker="o", linewidth=2.5,
-        markersize=8, color="blue",  label="In-Distribution")
+        markersize=8, color="mediumorchid",  label="In-Distribution")
 ax.plot(ensemble_sizes, entropy_ood, marker="s", linewidth=2.5,
-        markersize=8, color="red",   label="Out-of-Distribution")
+        markersize=8, color="gold",   label="Out-of-Distribution")
 
 ax.set_xlabel("Ensemble Size")
 ax.set_ylabel("Predictive Entropy")
@@ -128,7 +128,7 @@ ax.legend(fontsize=14)
 ax.grid(True)
 fig.tight_layout()
 apply_custom_theme(ax)
-
+plt.show()
 # === Speichern (optional) ====================================================
 
 output_dir = "plots/Saved_Plots"
@@ -138,4 +138,4 @@ os.makedirs(output_dir, exist_ok=True)
 filename = f"predictive_entropy_{file_suffix}.png"
 fig.savefig(os.path.join(output_dir, filename), bbox_inches="tight", dpi=300)
 
-plt.show()
+
