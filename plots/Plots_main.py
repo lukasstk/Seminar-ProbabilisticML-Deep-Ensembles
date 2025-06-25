@@ -55,7 +55,7 @@ ensemble.append(load_bnn_model("Ensemble_Member_5", len_x_train=len(x_train_full
 #%% Train DE-BNN
 ensemble = train_deep_ensemble(x_train, y_train, x_val, y_val, input_shape, num_classes, n_models=5)
 
-# Modell initialisieren
+"""# Modell initialisieren
 CIFAR10_BNN = BigConvolutionalBNN(input_shape, num_classes, len_x_train=len(x_train_full))
 
 # Kompilieren mit angepasster Lernrate
@@ -85,7 +85,7 @@ CIFAR10_BNN.fit(
 
 y_proba_cifar = CIFAR10_BNN.predict_proba_mc(x_test, mc_samples=30)
 results_cifar_bnn = evaluate_model(y_test, y_proba_cifar)
-print(results_cifar_bnn)
+print(results_cifar_bnn)"""
 
 #%% Evaluate both models
 print("\nEvaluating DE-BNN")

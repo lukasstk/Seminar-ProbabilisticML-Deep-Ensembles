@@ -37,8 +37,8 @@ def plot_ensemble_metrics(ensemble, single, mnist=True):
             single_value *= 100
 
         fig, ax = plt.subplots(figsize=(12, 6))
-        ax.plot(ensemble_sizes, values, marker='o', color='blue', label='DE-BNN', linewidth=2.5, markersize=8)
-        ax.axhline(y=single_value, color='red', linestyle='--', label='Single-BNN', linewidth=2.5)
+        ax.plot(ensemble_sizes, values, marker='o', color='steelblue', label='DE-BNN', linewidth=2.5, markersize=8)
+        ax.axhline(y=single_value, color='tomato', linestyle='--', label='Single-BNN', linewidth=2.5)
         ax.set_xlabel("Ensemble Size")
         ylabel = f"{metric_name} (%)" if is_percent_metric else metric_name
         ax.set_ylabel(ylabel)
