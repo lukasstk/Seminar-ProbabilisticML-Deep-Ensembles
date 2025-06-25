@@ -1,106 +1,17 @@
-from torchvision.datasets import CIFAR10
-
+from plots.Plots_Helper import plot_ensemble_metrics
 from imports import *
-from ConvolutionalBNN_Model import ConvolutionalBNN
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
 import pandas as pd
-import time
-from matplotlib import pyplot as plt
-from netcal.metrics import ECE
-from sklearn.metrics import brier_score_loss
-from Save_and_Load_Models import save_bnn_model, load_bnn_model
+from Save_and_Load_Models import save_bnn_model
 from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.optimizers import Adam
+from Ensemble_helper import train_deep_ensemble, BigConvolutionalBNN, evaluate_model, ensemble_predict_proba
+import matplotlib.pyplot as plt
 
 seed = 42
 random.seed(seed)
 np.random.seed(seed)
 tf.random.set_seed(seed)
-
-#%% Angepasste Klasse für CIFAR-10 BNN
-class BigConvolutionalBNN(ConvolutionalBNN):
-    def _build_model(self):
-        kl = lambda q, p, _: tfp.distributions.kl_divergence(q, p) * self.kl_weight
-
-        model = tfk.Sequential([
-            # Block 1
-            tfpl.Convolution2DFlipout(64, kernel_size=(3, 3), padding='same', activation='relu',
-                                      input_shape=self.input_shape, kernel_divergence_fn=kl),
-            tfk.layers.BatchNormalization(),
-            tfpl.Convolution2DFlipout(64, kernel_size=(3, 3), padding='same', activation='relu',
-                                      kernel_divergence_fn=kl),
-            tfk.layers.BatchNormalization(),
-            tfk.layers.MaxPooling2D(pool_size=(2, 2)),
-
-            # Block 2
-            tfpl.Convolution2DFlipout(128, kernel_size=(3, 3), padding='same', activation='relu',
-                                      kernel_divergence_fn=kl),
-            tfk.layers.BatchNormalization(),
-            tfpl.Convolution2DFlipout(128, kernel_size=(3, 3), padding='same', activation='relu',
-                                      kernel_divergence_fn=kl),
-            tfk.layers.BatchNormalization(),
-            tfk.layers.MaxPooling2D(pool_size=(2, 2)),
-
-            # Block 3
-            tfpl.Convolution2DFlipout(256, kernel_size=(3, 3), padding='same', activation='relu',
-                                      kernel_divergence_fn=kl),
-            tfk.layers.BatchNormalization(),
-            tfpl.Convolution2DFlipout(256, kernel_size=(3, 3), padding='same', activation='relu',
-                                      kernel_divergence_fn=kl),
-            tfk.layers.BatchNormalization(),
-            tfk.layers.MaxPooling2D(pool_size=(2, 2)),
-
-            # Dense
-            tfk.layers.Flatten(),
-            tfpl.DenseFlipout(512, activation='relu', kernel_divergence_fn=kl),
-            tfk.layers.Dropout(0.4),
-            tfpl.DenseFlipout(256, activation='relu', kernel_divergence_fn=kl),
-            tfk.layers.Dropout(0.3),
-            tfpl.DenseFlipout(self.num_classes, activation=None, kernel_divergence_fn=kl)
-        ])
-
-        return model
-
-#%% Deep Ensemble Training
-def train_deep_ensemble(X_train, y_train, X_val, y_val, input_shape, num_classes, n_models, class_labels=None):
-    ensemble_models = []
-    for i in range(n_models):
-        print(f"\nTraining model {i+1}/{n_models}")
-        model = ConvolutionalBNN(input_shape, num_classes, len(X_train), class_labels=class_labels)
-        model.compile()
-        model.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=10, batch_size=64, verbose=1)
-        ensemble_models.append(model)
-    return ensemble_models
-
-def ensemble_predict_proba(ensemble, X):
-    all_probs = [model.predict_proba(X) for model in ensemble]
-    return np.mean(np.stack(all_probs, axis=0), axis=0)
-
-def ensemble_predict_classes(ensemble, X):
-    probs = ensemble_predict_proba(ensemble, X)
-    return np.argmax(probs, axis=1)
-
-def predictive_entropy(y_proba):
-    dist = tfp.distributions.Categorical(probs=y_proba)
-    return tf.reduce_mean(dist.entropy()).numpy()
-
-def evaluate_model(y_true, y_proba, num_classes=10):
-    y_pred = np.argmax(y_proba, axis=1)
-    acc = accuracy_score(y_true, y_pred)
-    nll = tf.keras.losses.SparseCategoricalCrossentropy()(y_true, y_proba).numpy()
-    brier = brier_score_loss(y_true, y_proba, scale_by_half=False)
-    entropy_val = predictive_entropy(y_proba)
-
-    ece = ECE(bins=num_classes)
-    ece_val = ece.measure(y_proba, y_true)
-    return {
-        "Accuracy": acc,
-        "NLL": nll,
-        "Brier Score": brier,
-        "Predictive Entropy": entropy_val,
-        "ECE": ece_val
-    }
 
 #%% Load MNIST or CIFAR-10 and apply preprocessing
 (x_train_full, y_train_full), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
@@ -171,6 +82,7 @@ CIFAR10_BNN.fit(
     callbacks=[early_stopping],
     verbose=1
 )
+
 y_proba_cifar = CIFAR10_BNN.predict_proba_mc(x_test, mc_samples=30)
 results_cifar_bnn = evaluate_model(y_test, y_proba_cifar)
 print(results_cifar_bnn)
@@ -203,67 +115,6 @@ for k in range(1, len(ensemble) + 1):
 # 3. Convert to DataFrame for analysis or plotting
 df_ensemble_metrics = pd.DataFrame(results_per_size)
 print(df_ensemble_metrics)
-
-def plot_ensemble_metrics(ensemble, single, mnist=True):
-    """
-    Plots evaluation metrics vs. ensemble size from a DataFrame and compares them to a fixed BNN baseline.
-
-    Parameters:
-    -----------
-    ensemble : pd.DataFrame
-        Must contain columns:
-        - "Ensemble Size"
-        - "Accuracy", "NLL", "Brier Score", "Predictive Entropy", "ECE"
-
-    single : dict
-        Reference metric values from a single BNN model. Keys must match column names in df.
-
-    mnist : bool (default=True)
-        If True, filenames end with "_MNIST.png", otherwise "_CIFAR10.png"
-    """
-    import matplotlib.ticker as mtick
-
-    ensemble_sizes = ensemble["Ensemble Size"].tolist()
-    metric_columns = [col for col in ensemble.columns if col != "Ensemble Size"]
-    suffix = "_MNIST.png" if mnist else "_CIFAR10.png"
-
-    for metric_name in metric_columns:
-        values = ensemble[metric_name].tolist()
-        single_value = single[metric_name]
-
-        is_percent_metric = metric_name == "Accuracy"  # ✅ Nur Accuracy in %
-        if is_percent_metric:
-            values = [v * 100 for v in values]
-            single_value *= 100
-
-        fig, ax = plt.subplots(figsize=(12, 6))
-        ax.plot(ensemble_sizes, values, marker='o', color='blue', label='DE-BNN', linewidth=2.5, markersize=8)
-        ax.axhline(y=single_value, color='red', linestyle='--', label='Single-BNN', linewidth=2.5)
-        ax.set_xlabel("Ensemble Size")
-        ylabel = f"{metric_name} (%)" if is_percent_metric else metric_name
-        ax.set_ylabel(ylabel)
-        ax.set_title(f"{metric_name} vs. Ensemble Size")
-        ax.set_xticks(ensemble_sizes)
-
-        # Setzt Formatierung je nach Metrik
-        if is_percent_metric:
-            ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.2f'))
-        elif metric_name == "Brier Score":
-            ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.4f'))
-        else:
-            ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.2f'))
-
-        ax.legend(fontsize=20)
-        ax.grid(True)
-        fig.tight_layout()
-        apply_custom_theme(ax)
-
-        # Save to plots/Saved_Plots
-        filename = f"plots/Saved_Plots/{metric_name.replace(' ', '_').lower()}{suffix}"
-        fig.savefig(filename, bbox_inches="tight", dpi=300)
-
-        plt.show()
-
 
 plot_ensemble_metrics(df_ensemble_metrics, df_ensemble_metrics.iloc[0,:], mnist=False)
 
