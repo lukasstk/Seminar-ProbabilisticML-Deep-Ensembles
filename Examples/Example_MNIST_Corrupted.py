@@ -3,7 +3,7 @@ from tensorflow_datasets.image_classification import MNISTCorrupted
 import tensorflow_datasets as tfds
 from sklearn.model_selection import train_test_split
 import numpy as np
-from Ensemble_helper import train_deep_ensemble, evaluate_model, ensemble_predict_proba
+from Model_Code.Ensemble_helper import train_deep_ensemble, evaluate_model, ensemble_predict_proba
 from plots.Plots_Helper import plot_ensemble_metrics, save_plots
 import pandas as pd
 import tensorflow as tf

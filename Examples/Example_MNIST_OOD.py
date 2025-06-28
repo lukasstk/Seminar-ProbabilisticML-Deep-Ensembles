@@ -1,6 +1,6 @@
 from matplotlib import pyplot as plt
-from Save_and_Load_Models import load_bnn_model
-from Ensemble_helper       import evaluate_model,ensemble_predict_proba
+from Model_Code.Save_and_Load_Models import load_bnn_model
+from Model_Code.Ensemble_helper import evaluate_model,ensemble_predict_proba
 from plots.Custom_plot_style import apply_custom_theme
 from sklearn.model_selection import train_test_split
 import tensorflow             as tf

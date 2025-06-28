@@ -23,6 +23,8 @@ Deep Ensembles and Bayesian Neural Networks are two state-of-the-art approaches 
 - Out-of-distribution and robustness analysis
 
 ## Project Structure
+
+```
 Seminar Deep Ensembles/
 ├── Examples/
 │ ├── Example_CIFAR_10.py
@@ -30,25 +32,29 @@ Seminar Deep Ensembles/
 │ ├── Example_MNIST_Corrupted.py
 │ ├── Example_MNIST_OOD.py
 │ └── Example_WINE.py
-├── models/
+├── Model_Code/
+│ ├── BNN_Model.py
+│ ├── ConvolutionalBNN_Model.py
+│ ├── ConvolutionalBNN_Model_Adversarial_Training.py
+│ ├── Ensemble_helper.py
+│ └── Save_and_Load_Models.py
 ├── plots/
 │ ├── Saved_Plots/
-│ │ ├── Custom_plot_style.py
-│ │ └── Data_Plots.py
+├── Saved_Plots/
+│   └── [result plots: accuracy, calibration, entropy, NLL, example images, etc.]
+│ ├── Custom_plot_style.py
+│ ├── Data_Plots.py
 │ ├── Plots_CIFAR10.py
 │ ├── Plots_Helper.py
 │ ├── Plots_main.py
 │ └── Plots_MNIST.py
 ├── Saved_Models/
+│ └── [ensemble member subfolders with .h5 weights and .json metadata files]
 ├── .gitignore
-├── BNN_Model.py
-├── ConvolutionalBNN_Model.py
-├── ConvolutionalBNN_Model_Adversarial_Training.py
-├── Ensemble_helper.py
 ├── README.md
 ├── requirements.txt
-├── Save_and_Load_Models.py
 └── venv/
+```
 
 
 ## Getting Started

@@ -1,7 +1,7 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from BNN_Model import *
+from Model_Code.BNN_Model import *
 
 # ----------------------------
 # Wine Quality – Vorbereitung & Training

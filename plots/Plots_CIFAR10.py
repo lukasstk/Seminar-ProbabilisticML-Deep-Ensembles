@@ -4,8 +4,8 @@ import numpy as np
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
 import pandas as pd
-from Save_and_Load_Models import save_bnn_model
-from Ensemble_helper import train_deep_ensemble, evaluate_model, ensemble_predict_proba
+from Model_Code.Save_and_Load_Models import save_bnn_model
+from Model_Code.Ensemble_helper import train_deep_ensemble, evaluate_model, ensemble_predict_proba
 
 seed = 42
 random.seed(seed)

@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
-from ConvolutionalBNN_Model import ConvolutionalBNN
+from Model_Code.ConvolutionalBNN_Model import ConvolutionalBNN
 
 # Set seed for reproducibility
 random_state = np.random.RandomState(42)
