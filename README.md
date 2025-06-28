@@ -4,7 +4,7 @@ A seminar project exploring Deep Ensembles and Bayesian Neural Networks for unce
 
 ## Overview
 
-This repository contains code and experiments related to the seminar **"Deep Ensembles"**, focusing on the practical and theoretical aspects of combining Deep Ensembles with Bayesian Neural Networks (BNNs). The experiments are primarily conducted on image classification benchmarks such as MNIST, MNIST-Corrupted, and CIFAR-10.
+This repository contains code and experiments related to the seminar **"Probabilistic ML"**, focusing on the practical and theoretical aspects of combining Deep Ensembles with Bayesian Neural Networks (BNNs). The experiments are primarily conducted on image classification benchmarks such as MNIST, MNIST-Corrupted, and CIFAR-10.
 
 ## Motivation
 
