@@ -1,14 +1,6 @@
 import pandas as pd
-import numpy as np
-import tensorflow as tf
-import tensorflow_probability as tfp
-import tensorflow.keras as tfk
-import tensorflow_probability as tfp
-tfpl = tfp.layers
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import classification_report, confusion_matrix
-from sklearn.utils import shuffle
 from BNN_Model import *
 
 # ----------------------------

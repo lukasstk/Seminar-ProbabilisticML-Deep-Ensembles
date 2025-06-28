@@ -31,7 +31,7 @@ def plot_ensemble_metrics(ensemble, single, mnist=True):
         values = ensemble[metric_name].tolist()
         single_value = single[metric_name]
 
-        is_percent_metric = metric_name == "Accuracy"  # ✅ Nur Accuracy in %
+        is_percent_metric = metric_name == "Accuracy"
         if is_percent_metric:
             values = [v * 100 for v in values]
             single_value *= 100
@@ -45,7 +45,6 @@ def plot_ensemble_metrics(ensemble, single, mnist=True):
         ax.set_title(f"{metric_name} vs. Ensemble Size")
         ax.set_xticks(ensemble_sizes)
 
-        # Setzt Formatierung je nach Metrik
         if is_percent_metric:
             ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.2f'))
         elif metric_name == "Brier Score":

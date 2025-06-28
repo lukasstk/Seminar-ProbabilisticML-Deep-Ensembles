@@ -1,4 +1,8 @@
-from imports import *
+import numpy as np
+import tensorflow as tf
+import tf_keras as tfk
+import tensorflow_probability as tfp
+tfpl = tfp.layers
 from ConvolutionalBNN_Model import ConvolutionalBNN
 from sklearn.metrics import accuracy_score
 from netcal.metrics import ECE

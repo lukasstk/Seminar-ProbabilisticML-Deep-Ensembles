@@ -101,7 +101,7 @@ fig.tight_layout()
 apply_custom_theme(ax)
 plt.show()
 
-output_dir = "plots/Saved_Plots"
+output_dir = "../plots/Saved_Plots"
 file_suffix = "entropy_ID_vs_OOD"
 
 os.makedirs(output_dir, exist_ok=True)

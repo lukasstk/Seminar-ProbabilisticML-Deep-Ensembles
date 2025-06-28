@@ -17,6 +17,32 @@ tf.random.set_seed(seed)
 builder = MNISTCorrupted(config="impulse_noise")
 builder.download_and_prepare()
 
+# ───────────────────────────────────────────────────────────────
+# Available configurations (corruption types) for MNIST-Corrupted:
+# Source: https://www.tensorflow.org/datasets/catalog/mnist_corrupted
+# Expected accuracy drop compared to clean MNIST (≈98% accuracy):
+#
+# 1.  'gaussian_noise'        → mild         (↓ 5–10%)
+# 2.  'shot_noise'            → moderate     (↓ 10–20%)
+# 3.  'impulse_noise'         → severe       (↓ 60–80%)
+# 4.  'defocus_blur'          → moderate     (↓ 15–25%)
+# 5.  'glass_blur'            → severe       (↓ 30–50%)
+# 6.  'motion_blur'           → moderate     (↓ 10–25%)
+# 7.  'zoom_blur'             → mild         (↓ 5–10%)
+# 8.  'snow'                  → moderate     (↓ 15–25%)
+# 9.  'frost'                 → moderate     (↓ 10–20%)
+# 10. 'fog'                   → moderate     (↓ 10–20%)
+# 11. 'brightness'            → mild         (↓ 5–10%)
+# 12. 'contrast'              → mild         (↓ 5–10%)
+# 13. 'elastic_transform'     → mild/moderate(↓ 5–15%)
+# 14. 'pixelate'              → moderate     (↓ 15–30%)
+# 15. 'jpeg_compression'      → minimal      (↓ 0–5%)
+# 16. 'rotate'                → severe       (↓ 40–60%)
+# 17. 'shear'                 → moderate     (↓ 10–25%)
+# 18. 'translate'             → moderate     (↓ 15–30%)
+# 19. 'scale'                 → moderate     (↓ 15–30%)
+
+
 ds = builder.as_dataset(split="test", as_supervised=True)
 X_all, y_all = zip(*[(x, y) for x, y in tfds.as_numpy(ds)])
 X_all = np.array(X_all) / 255.0

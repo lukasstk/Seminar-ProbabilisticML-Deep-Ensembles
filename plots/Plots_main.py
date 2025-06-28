@@ -1,12 +1,12 @@
 from plots.Plots_Helper import plot_ensemble_metrics
-from imports import *
+import random
+import numpy as np
+import tensorflow as tf
 from sklearn.model_selection import train_test_split
 import pandas as pd
 from Save_and_Load_Models import save_bnn_model
 from tensorflow.keras.callbacks import EarlyStopping
-from tensorflow.keras.optimizers import Adam
-from Ensemble_helper import train_deep_ensemble, BigConvolutionalBNN, evaluate_model, ensemble_predict_proba
-import matplotlib.pyplot as plt
+from Ensemble_helper import train_deep_ensemble, evaluate_model, ensemble_predict_proba
 
 seed = 42
 random.seed(seed)
@@ -39,6 +39,7 @@ y_test = y_test.flatten()
 x_train, x_val, y_train, y_val = train_test_split(x_train_full, y_train_full, test_size=0.2, random_state=seed)
 num_classes = len(np.unique(y_train_full))
 
+#Load already existing models, very similar but not identical results
 """ensemble = []"""
 """ensemble.append(load_bnn_model("Ensemble_Member_1", len_x_train=len(x_train_full)))
 ensemble.append(load_bnn_model("Ensemble_Member_2", len_x_train=len(x_train_full)))
@@ -54,38 +55,6 @@ ensemble.append(load_bnn_model("Ensemble_Member_5", len_x_train=len(x_train_full
 
 #%% Train DE-BNN
 ensemble = train_deep_ensemble(x_train, y_train, x_val, y_val, input_shape, num_classes, n_models=5)
-
-"""# Modell initialisieren
-CIFAR10_BNN = BigConvolutionalBNN(input_shape, num_classes, len_x_train=len(x_train_full))
-
-# Kompilieren mit angepasster Lernrate
-CIFAR10_BNN.compile(
-    optimizer=Adam(learning_rate=1e-4),
-    loss='sparse_categorical_crossentropy',
-    metrics=['accuracy']
-)
-
-# EarlyStopping-Callback
-early_stopping = EarlyStopping(
-    monitor='val_accuracy',
-    patience=5,
-    restore_best_weights=True
-    #, min_delta=0.001 # Optional: minimale Verbesserung von 0.1 Prozentpunkten
-)
-
-# Training starten mit Callback
-CIFAR10_BNN.fit(
-    x_train, y_train,
-    validation_data=(x_val, y_val),
-    epochs=50,
-    batch_size=64,
-    callbacks=[early_stopping],
-    verbose=1
-)
-
-y_proba_cifar = CIFAR10_BNN.predict_proba_mc(x_test, mc_samples=30)
-results_cifar_bnn = evaluate_model(y_test, y_proba_cifar)
-print(results_cifar_bnn)"""
 
 #%% Evaluate both models
 print("\nEvaluating DE-BNN")
