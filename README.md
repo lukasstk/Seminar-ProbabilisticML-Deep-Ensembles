@@ -1,4 +1,4 @@
-# Seminar-Deep-Ensembles
+# Seminar topic: Deep Ensembles
 
 A seminar project exploring Deep Ensembles and Bayesian Neural Networks for uncertainty estimation and robustness in deep learning.
 
