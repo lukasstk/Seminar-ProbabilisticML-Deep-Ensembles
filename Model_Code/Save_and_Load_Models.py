@@ -1,7 +1,7 @@
 import os
 import json
 import tensorflow as tf
-from ConvolutionalBNN_Model import ConvolutionalBNN
+from Model_Code.ConvolutionalBNN_Model import ConvolutionalBNN
 import tensorflow_probability as tfp
 import numpy as np
 import random

@@ -1,6 +1,6 @@
 from matplotlib import pyplot as plt
 from Model_Code.Save_and_Load_Models import load_bnn_model
-from Model_Code.Ensemble_helper import evaluate_model,ensemble_predict_proba
+from Model_Code.Ensemble_helper import evaluate_model, ensemble_predict_proba, train_deep_ensemble
 from plots.Custom_plot_style import apply_custom_theme
 from sklearn.model_selection import train_test_split
 import tensorflow             as tf
@@ -35,17 +35,17 @@ input_shape = (28, 28, 1)
 num_classes = 10
 
 # -- Deep Ensemble ------------------------------------------------------------
-"""ensemble = train_deep_ensemble(
+ensemble = train_deep_ensemble(
     x_train, y_train,
     x_val,   y_val,
     input_shape, num_classes,
     n_models=5,
-)"""
+)
 
-ensemble = [
+"""ensemble = [
     load_bnn_model(f"Ensemble_Member_{i+1}_MNIST", len_x_train=len(x_train_full))
     for i in range(5)
-]
+]"""
 
 y_proba_de = ensemble_predict_proba(ensemble, x_test)
 y_proba_de_ood = ensemble_predict_proba(ensemble, x_ood_test)
@@ -107,5 +107,6 @@ file_suffix = "entropy_ID_vs_OOD"
 os.makedirs(output_dir, exist_ok=True)
 filename = f"predictive_entropy_{file_suffix}.png"
 fig.savefig(os.path.join(output_dir, filename), bbox_inches="tight", dpi=300)
+
 
 

@@ -1,11 +1,10 @@
-from plots.Plots_Helper import plot_ensemble_metrics
+from plots.Plots_Helper import plot_ensemble_metrics, save_plots
 import random
 import numpy as np
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
 import pandas as pd
 from Model_Code.Save_and_Load_Models import save_bnn_model
-from tensorflow.keras.callbacks import EarlyStopping
 from Model_Code.Ensemble_helper import train_deep_ensemble, evaluate_model, ensemble_predict_proba
 
 seed = 42
@@ -14,8 +13,8 @@ np.random.seed(seed)
 tf.random.set_seed(seed)
 
 #%% Load MNIST or CIFAR-10 and apply preprocessing
-(x_train_full, y_train_full), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
-#(x_train_full, y_train_full), (x_test, y_test) = tf.keras.datasets.mnist.load_data()  # Uncomment if using MNIST
+#(x_train_full, y_train_full), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
+(x_train_full, y_train_full), (x_test, y_test) = tf.keras.datasets.mnist.load_data()  # Uncomment if using MNIST
 
 # Normalize pixel values
 x_train_full = x_train_full.astype("float32") / 255.0
@@ -85,10 +84,12 @@ for k in range(1, len(ensemble) + 1):
 df_ensemble_metrics = pd.DataFrame(results_per_size)
 print(df_ensemble_metrics)
 
-plot_ensemble_metrics(df_ensemble_metrics, df_ensemble_metrics.iloc[0,:], mnist=False)
+plots = plot_ensemble_metrics(df_ensemble_metrics, df_ensemble_metrics.iloc[0,:], mnist=True)
 
-save_bnn_model(ensemble[0], "Ensemble_Member_1_CIFAR10")
-save_bnn_model(ensemble[1], "Ensemble_Member_2_CIFAR10")
-save_bnn_model(ensemble[2], "Ensemble_Member_3_CIFAR10")
-save_bnn_model(ensemble[3], "Ensemble_Member_4_CIFAR10")
-save_bnn_model(ensemble[4], "Ensemble_Member_5_CIFAR10")
+save_plots(plots, output_dir="plots/Saved_Plots")
+
+save_bnn_model(ensemble[0], "Ensemble_Member_1_MNIST")
+save_bnn_model(ensemble[1], "Ensemble_Member_2_MNIST")
+save_bnn_model(ensemble[2], "Ensemble_Member_3_MNIST")
+save_bnn_model(ensemble[3], "Ensemble_Member_4_MNIST")
+save_bnn_model(ensemble[4], "Ensemble_Member_5_MNIST")
