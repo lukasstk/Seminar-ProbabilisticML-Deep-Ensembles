@@ -9,6 +9,8 @@ import pandas                 as pd
 import random, os
 import matplotlib.ticker as mtick
 
+from plots.Plots_Helper import save_plots
+
 seed = 42
 random.seed(seed)
 np.random.seed(seed)
@@ -101,12 +103,13 @@ fig.tight_layout()
 apply_custom_theme(ax)
 plt.show()
 
-output_dir = "../plots/Saved_Plots"
-file_suffix = "entropy_ID_vs_OOD"
+# Create a list in the expected format: [(fig, metric_name, suffix)]
+plots = [
+    (fig, "predictive_entropy_entropy_ID_vs_OOD", ".png")  # suffix must start with dot if you want .png
+]
 
-os.makedirs(output_dir, exist_ok=True)
-filename = f"predictive_entropy_{file_suffix}.png"
-fig.savefig(os.path.join(output_dir, filename), bbox_inches="tight", dpi=300)
+# Save the plot using your function
+save_plots(plots, output_dir="plots/Saved_Plots")
 
 
 
