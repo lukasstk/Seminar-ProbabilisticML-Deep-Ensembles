@@ -50,8 +50,8 @@ ensemble = train_deep_ensemble(
 y_proba_de = ensemble_predict_proba(ensemble, x_test)
 y_proba_de_ood = ensemble_predict_proba(ensemble, x_ood_test)
 
-results_de = evaluate_model(y_test, y_proba_de, num_classes)
-results_de_ood = evaluate_model(y_test, y_proba_de_ood, num_classes)
+results_de = evaluate_model(y_true = y_test, y_proba = y_proba_de, num_classes = num_classes)
+results_de_ood = evaluate_model(y_true = y_test, y_proba = y_proba_de_ood, num_classes = num_classes)
 
 probs_list_id  = [m.predict_proba(x_test) for m in ensemble]   # In-Distribution
 probs_list_ood = [m.predict_proba(x_ood_test)  for m in ensemble]   # Out-of-Distribution
