@@ -4,7 +4,7 @@ import numpy as np
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
 import pandas as pd
-from Model_Code.Save_and_Load_Models import save_bnn_model
+from Model_Code.Save_and_Load_Models import save_bnn_model, load_bnn_model
 from Model_Code.Ensemble_helper import train_deep_ensemble, evaluate_model, ensemble_predict_proba
 
 seed = 42
@@ -13,8 +13,8 @@ np.random.seed(seed)
 tf.random.set_seed(seed)
 
 #%% Load MNIST or CIFAR-10 and apply preprocessing
-#(x_train_full, y_train_full), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
-(x_train_full, y_train_full), (x_test, y_test) = tf.keras.datasets.mnist.load_data()  # Uncomment if using MNIST
+(x_train_full, y_train_full), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
+#(x_train_full, y_train_full), (x_test, y_test) = tf.keras.datasets.mnist.load_data()  # Uncomment if using MNIST
 
 # Normalize pixel values
 x_train_full = x_train_full.astype("float32") / 255.0
@@ -39,14 +39,9 @@ x_train, x_val, y_train, y_val = train_test_split(x_train_full, y_train_full, te
 num_classes = len(np.unique(y_train_full))
 
 #Load already existing models, very similar but not identical results
-"""ensemble = []"""
-"""ensemble.append(load_bnn_model("Ensemble_Member_1", len_x_train=len(x_train_full)))
-ensemble.append(load_bnn_model("Ensemble_Member_2", len_x_train=len(x_train_full)))
-ensemble.append(load_bnn_model("Ensemble_Member_3", len_x_train=len(x_train_full)))
-ensemble.append(load_bnn_model("Ensemble_Member_4", len_x_train=len(x_train_full)))
-ensemble.append(load_bnn_model("Ensemble_Member_5", len_x_train=len(x_train_full)))"""
+"""ensemble = []
 
-"""ensemble = [
+ensemble = [
     load_bnn_model(f"Ensemble_Member_{i+1}_CIFAR10", len_x_train=len(x_train_full))
     for i in range(5)
 ]"""
