@@ -99,15 +99,15 @@ entropy_ood    = df_ensemble_metrics_ood["Predictive Entropy"].tolist()    # OOD
 # === Plot ====================================================================
 fig, ax = plt.subplots(figsize=(12, 6))
 
-ax.plot(ensemble_sizes, entropy_id,  marker="o", linewidth=2.5,
+ax.plot(ensemble_sizes, entropy_id,  marker="o", linewidth=3.5,
         markersize=8, color="mediumorchid",  label="Ensemble (ID)")
-ax.plot(ensemble_sizes, entropy_ood, marker="s", linewidth=2.5,
+ax.plot(ensemble_sizes, entropy_ood, marker="s", linewidth=3.5,
         markersize=8, color="gold",   label="Ensemble (OOD)")
 
 # Add horizontal lines for single model
-ax.axhline(entropy_single_id,  linestyle="--", color="purple", linewidth=2,
+ax.axhline(entropy_single_id,  linestyle="--", color="purple", linewidth=3,
            label=f"Single-BNN (ID)")
-ax.axhline(entropy_single_ood, linestyle="--", color="goldenrod", linewidth=2,
+ax.axhline(entropy_single_ood, linestyle="--", color="goldenrod", linewidth=3,
            label=f"Single-BNN (OOD)")
 
 ax.set_xlabel("Ensemble Size")

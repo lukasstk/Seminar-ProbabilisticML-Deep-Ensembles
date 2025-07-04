@@ -55,13 +55,13 @@ class BigConvolutionalBNN(ConvolutionalBNN):
         return model
 
 #%% Deep Ensemble Training
-def train_deep_ensemble(X_train, y_train, X_val, y_val, input_shape, num_classes, n_models, class_labels=None):
+def train_deep_ensemble(X_train, y_train, X_val, y_val, input_shape, num_classes, n_models, epochs=10, class_labels=None):
     ensemble_models = []
     for i in range(n_models):
         print(f"\nTraining model {i+1}/{n_models}")
         model = ConvolutionalBNN(input_shape, num_classes, len(X_train), class_labels=class_labels)
         model.compile()
-        model.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=10, batch_size=64, verbose=1)
+        model.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=epochs, batch_size=64, verbose=1)
         ensemble_models.append(model)
     return ensemble_models
 

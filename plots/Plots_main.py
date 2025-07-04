@@ -43,10 +43,10 @@ x_train, x_val, y_train, y_val = train_test_split(x_train_full, y_train_full, te
 num_classes = len(np.unique(y_train_full))
 
 #Load already existing models, very similar but not identical results
-"""ensemble = []
+ensemble = []
 
-ensemble = [
-    load_bnn_model(f"Ensemble_Member_{i+1}_MNIST", len_x_train=len(x_train_full))
+"""ensemble = [
+    load_bnn_model(f"Ensemble_Member_{i+1}_CIFAR10", len_x_train=len(x_train_full))
     for i in range(5)
 ]"""
 # or for MNIST
@@ -56,7 +56,7 @@ ensemble = [
 ]"""
 
 #%% Train DE-BNN
-ensemble = train_deep_ensemble(x_train, y_train, x_val, y_val, input_shape, num_classes, n_models=5)
+ensemble = train_deep_ensemble(x_train, y_train, x_val, y_val, input_shape, num_classes, epochs = 10, n_models=5)
 
 # 1. Instantiate your model
 single_bnn = ConvolutionalBNN(
