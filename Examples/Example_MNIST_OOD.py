@@ -37,17 +37,29 @@ input_shape = (28, 28, 1)
 num_classes = 10
 
 # -- Deep Ensemble ------------------------------------------------------------
-ensemble = train_deep_ensemble(
+"""ensemble = train_deep_ensemble(
     x_train, y_train,
     x_val,   y_val,
     input_shape, num_classes,
     n_models=5,
-)
+)"""
 
-"""ensemble = [
+ensemble = [
     load_bnn_model(f"Ensemble_Member_{i+1}_MNIST", len_x_train=len(x_train_full))
     for i in range(5)
-]"""
+]
+
+
+single_model = load_bnn_model("Single_Model_MNIST", len_x_train=len(x_train_full))
+
+y_proba_single_id  = single_model.predict_proba(x_test)
+y_proba_single_ood = single_model.predict_proba(x_ood_test)
+
+results_single_id  = evaluate_model(y_true = y_test,      y_proba = y_proba_single_id,  num_classes = num_classes)
+results_single_ood = evaluate_model(y_true = y_ood_test,  y_proba = y_proba_single_ood, num_classes = num_classes)
+
+entropy_single_id  = results_single_id["Predictive Entropy"]
+entropy_single_ood = results_single_ood["Predictive Entropy"]
 
 y_proba_de = ensemble_predict_proba(ensemble, x_test)
 y_proba_de_ood = ensemble_predict_proba(ensemble, x_ood_test)
@@ -88,27 +100,30 @@ entropy_ood    = df_ensemble_metrics_ood["Predictive Entropy"].tolist()    # OOD
 fig, ax = plt.subplots(figsize=(12, 6))
 
 ax.plot(ensemble_sizes, entropy_id,  marker="o", linewidth=2.5,
-        markersize=8, color="mediumorchid",  label="In-Distribution")
+        markersize=8, color="mediumorchid",  label="Ensemble (ID)")
 ax.plot(ensemble_sizes, entropy_ood, marker="s", linewidth=2.5,
-        markersize=8, color="gold",   label="Out-of-Distribution")
+        markersize=8, color="gold",   label="Ensemble (OOD)")
+
+# Add horizontal lines for single model
+ax.axhline(entropy_single_id,  linestyle="--", color="purple", linewidth=2,
+           label=f"Single-BNN (ID)")
+ax.axhline(entropy_single_ood, linestyle="--", color="goldenrod", linewidth=2,
+           label=f"Single-BNN (OOD)")
 
 ax.set_xlabel("Ensemble Size")
 ax.set_ylabel("Predictive Entropy")
 ax.set_title("Predictive Entropy: ID vs. OOD")
 ax.set_xticks(ensemble_sizes)
 ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.2f'))
-ax.legend(fontsize=14)
+ax.legend(fontsize=16, loc='center right')
 ax.grid(True)
 fig.tight_layout()
 apply_custom_theme(ax)
 plt.show()
 
-# Create a list in the expected format: [(fig, metric_name, suffix)]
 plots = [
-    (fig, "predictive_entropy_entropy_ID_vs_OOD", ".png")  # suffix must start with dot if you want .png
+    (fig, "predictive_entropy_entropy_ID_vs_OOD", ".png")
 ]
-
-# Save the plot using your function
 save_plots(plots, output_dir="plots/Saved_Plots")
 
 

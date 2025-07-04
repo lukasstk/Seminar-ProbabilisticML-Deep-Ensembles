@@ -3,6 +3,8 @@ from tensorflow_datasets.image_classification import MNISTCorrupted
 import tensorflow_datasets as tfds
 from sklearn.model_selection import train_test_split
 import numpy as np
+
+from Model_Code.ConvolutionalBNN_Model import ConvolutionalBNN
 from Model_Code.Ensemble_helper import train_deep_ensemble, evaluate_model, ensemble_predict_proba
 from plots.Plots_Helper import plot_ensemble_metrics, save_plots
 import pandas as pd
@@ -58,14 +60,40 @@ num_classes  = 10
 #%% Train DE-BNN
 ensemble = train_deep_ensemble(x_train, y_train, x_val, y_val, input_shape, num_classes, n_models=5)
 
+# 1. Instantiate your model
+single_bnn = ConvolutionalBNN(
+    input_shape=input_shape,
+    num_classes=num_classes,
+    len_x_train=len(x_train),     # or len(x_train_full) if you want to use the full train set length for KL
+    class_labels=None,            # or [0, 1, ..., 9] if you want explicit labels
+    seed=seed
+)
+
+# 2. Compile your model
+single_bnn.compile()
+
+# 3. Train the model
+single_bnn.fit(
+    x_train,
+    y_train,
+    validation_data=(x_val, y_val),
+    epochs=50,         # or any desired number of epochs
+    batch_size=64,    # or any suitable batch size
+    verbose=1
+)
+
 #%% Evaluate both models
 print("\nEvaluating DE-BNN")
 y_proba_de = ensemble_predict_proba(ensemble, x_test)
 results_de = evaluate_model(y_test, y_proba_de)
 
+print("\nEvaluating Single-BNN")
+y_proba_single = single_bnn.predict_proba(x_test)
+results_single = evaluate_model(y_test, y_proba_single)
+
 #%% Print comparison
 results_df = pd.DataFrame({
-    """"Single-BNN": results_single,"""
+    "Single-BNN": results_single,
     "DE-BNN": results_de
 })
 print("\nComparison of Evaluation Metrics:")
@@ -87,6 +115,6 @@ for k in range(1, len(ensemble) + 1):
 df_ensemble_metrics = pd.DataFrame(results_per_size)
 print(df_ensemble_metrics)
 
-plots = plot_ensemble_metrics(df_ensemble_metrics, df_ensemble_metrics.iloc[0,:], mnist=True)
+plots = plot_ensemble_metrics(df_ensemble_metrics, evaluate_model(y_test, y_proba_single, num_classes=10), mnist=True)
 
 save_plots(plots, file_suffix="Corrupted")
