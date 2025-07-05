@@ -116,7 +116,7 @@ print(df_ensemble_metrics)
 
 plots = plot_ensemble_metrics(df_ensemble_metrics, evaluate_model(y_test, y_proba_single, num_classes=10) , mnist=True)
 
-"""save_plots(plots, output_dir="plots/Saved_Plots")"""
+save_plots(plots, output_dir="plots/Saved_Plots")
 
 #Train/Val/Test Accuracy plot
 num_epochs = 50
