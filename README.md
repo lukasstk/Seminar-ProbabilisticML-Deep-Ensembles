@@ -40,7 +40,9 @@ Seminar Deep Ensembles/
 │   └── Save_and_Load_Models.py
 ├── plots/
 │   ├── Saved_Plots/
-│   │   └── [result plots: accuracy, calibration, entropy, NLL, example images, etc.]
+│   │   ├── Plots_fair_comparison/
+│   │   │   └── [Plots from experiments with equal total computational time for fair comparison]
+│   │   └── [Standard result plots: accuracy, calibration, entropy, NLL, example images, etc.]
 │   ├── Custom_plot_style.py
 │   ├── Data_Plots.py
 │   ├── Plots_CIFAR10.py
