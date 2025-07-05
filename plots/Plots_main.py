@@ -116,7 +116,7 @@ print(df_ensemble_metrics)
 
 plots = plot_ensemble_metrics(df_ensemble_metrics, evaluate_model(y_test, y_proba_single, num_classes=10) , mnist=True)
 
-save_plots(plots, output_dir="plots/Saved_Plots")
+save_plots(plots, output_dir="plots/Saved_Plots/Plots_fair_comparison")
 
 #Train/Val/Test Accuracy plot
 num_epochs = 50
@@ -168,7 +168,7 @@ plt.show()
 all_acc_single = [
     (fig, "all_acc_single_bnn", ".png")   # Dateiname: learning_curve_single_bnn.png
 ]
-save_plots(all_acc_single, output_dir="plots/Saved_Plots")
+save_plots(all_acc_single, output_dir="plots/Saved_Plots/Plots_fair_comparison")
 
 save_bnn_model(single_bnn, "Single_Model_MNIST")
 
