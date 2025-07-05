@@ -50,13 +50,14 @@ ensemble = []
     for i in range(5)
 ]"""
 # or for MNIST
-"""ensemble = [
+ensemble = [
     load_bnn_model(f"Ensemble_Member_{i+1}_MNIST", len_x_train=len(x_train_full))
     for i in range(5)
-]"""
+]
 
 #%% Train DE-BNN
-ensemble = train_deep_ensemble(x_train, y_train, x_val, y_val, input_shape, num_classes, epochs = 10, n_models=5)
+
+# ensemble = train_deep_ensemble(x_train, y_train, x_val, y_val, input_shape, num_classes, epochs = 10, n_models=5)
 
 # 1. Instantiate your model
 single_bnn = ConvolutionalBNN(
@@ -115,7 +116,7 @@ print(df_ensemble_metrics)
 
 plots = plot_ensemble_metrics(df_ensemble_metrics, evaluate_model(y_test, y_proba_single, num_classes=10) , mnist=True)
 
-save_plots(plots, output_dir="plots/Saved_Plots")
+"""save_plots(plots, output_dir="plots/Saved_Plots")"""
 
 #Train/Val/Test Accuracy plot
 num_epochs = 50
@@ -149,7 +150,7 @@ ax.set_ylabel('Accuracy')
 ax.set_title('Learning Curve (Train/Val/Test)', fontweight='bold')
 
 ax.set_xlim(0, 50)
-ax.set_ylim(0.89, 0.96)  # Optional: set this tighter to your range, or use 0,1 for full percent scale
+ax.set_ylim(0.75, 0.96)  # Optional: set this tighter to your range, or use 0,1 for full percent scale
 
 # Format y-axis as percent
 ax.yaxis.set_major_formatter(mtick.PercentFormatter(xmax=1.0, decimals=0))
@@ -171,8 +172,8 @@ save_plots(all_acc_single, output_dir="plots/Saved_Plots")
 
 save_bnn_model(single_bnn, "Single_Model_MNIST")
 
-save_bnn_model(ensemble[0], "Ensemble_Member_1_MNIST")
+"""save_bnn_model(ensemble[0], "Ensemble_Member_1_MNIST")
 save_bnn_model(ensemble[1], "Ensemble_Member_2_MNIST")
 save_bnn_model(ensemble[2], "Ensemble_Member_3_MNIST")
 save_bnn_model(ensemble[3], "Ensemble_Member_4_MNIST")
-save_bnn_model(ensemble[4], "Ensemble_Member_5_MNIST")
+save_bnn_model(ensemble[4], "Ensemble_Member_5_MNIST")"""
