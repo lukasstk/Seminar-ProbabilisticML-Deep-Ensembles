@@ -1,4 +1,6 @@
 from matplotlib import pyplot as plt
+
+from Model_Code.ConvolutionalBNN_Model import ConvolutionalBNN
 from Model_Code.Save_and_Load_Models import load_bnn_model
 from Model_Code.Ensemble_helper import evaluate_model, ensemble_predict_proba, train_deep_ensemble
 from plots.Custom_plot_style import apply_custom_theme
@@ -37,23 +39,44 @@ input_shape = (28, 28, 1)
 num_classes = 10
 
 # -- Deep Ensemble ------------------------------------------------------------
-"""ensemble = train_deep_ensemble(
+ensemble = train_deep_ensemble(
     x_train, y_train,
     x_val,   y_val,
     input_shape, num_classes,
-    n_models=5,
-)"""
+    n_models=5, epochs=10
+)
 
-ensemble = [
+single_bnn = ConvolutionalBNN(
+    input_shape=input_shape,
+    num_classes=num_classes,
+    len_x_train=len(x_train),
+    class_labels=None,
+    seed=seed
+)
+
+# 2. Compile your model
+single_bnn.compile()
+
+# 3. Train the model
+single_bnn.fit(
+    x_train,
+    y_train,
+    validation_data=(x_val, y_val),
+    epochs=50,
+    batch_size=64,
+    verbose=1
+)
+
+"""ensemble = [
     load_bnn_model(f"Ensemble_Member_{i+1}_MNIST", len_x_train=len(x_train_full))
     for i in range(5)
-]
+]"""
 
 
-single_model = load_bnn_model("Single_Model_MNIST", len_x_train=len(x_train_full))
+"""single_bnn = load_bnn_model("Single_Model_MNIST", len_x_train=len(x_train_full))"""
 
-y_proba_single_id  = single_model.predict_proba(x_test)
-y_proba_single_ood = single_model.predict_proba(x_ood_test)
+y_proba_single_id  = single_bnn.predict_proba(x_test)
+y_proba_single_ood = single_bnn.predict_proba(x_ood_test)
 
 results_single_id  = evaluate_model(y_true = y_test,      y_proba = y_proba_single_id,  num_classes = num_classes)
 results_single_ood = evaluate_model(y_true = y_ood_test,  y_proba = y_proba_single_ood, num_classes = num_classes)
@@ -124,7 +147,7 @@ plt.show()
 plots = [
     (fig, "predictive_entropy_entropy_ID_vs_OOD", ".png")
 ]
-save_plots(plots, output_dir="plots/Saved_Plots")
+save_plots(plots, output_dir="plots/Saved_Plots/Plots_fair_comparison")
 
 
 

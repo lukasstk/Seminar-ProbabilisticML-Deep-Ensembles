@@ -58,7 +58,7 @@ input_shape  = (28, 28, 1)
 num_classes  = 10
 
 #%% Train DE-BNN
-ensemble = train_deep_ensemble(x_train, y_train, x_val, y_val, input_shape, num_classes, n_models=5)
+ensemble = train_deep_ensemble(x_train, y_train, x_val, y_val, input_shape, num_classes, n_models=5, epochs=10)
 
 # 1. Instantiate your model
 single_bnn = ConvolutionalBNN(
@@ -117,4 +117,4 @@ print(df_ensemble_metrics)
 
 plots = plot_ensemble_metrics(df_ensemble_metrics, evaluate_model(y_test, y_proba_single, num_classes=10), mnist=True)
 
-save_plots(plots, file_suffix="Corrupted")
+save_plots(plots, output_dir="plots/Saved_Plots/Plots_fair_comparison", file_suffix="Corrupted")

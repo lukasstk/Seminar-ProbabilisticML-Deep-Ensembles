@@ -17,8 +17,8 @@ np.random.seed(seed)
 tf.random.set_seed(seed)
 
 #%% Load MNIST or CIFAR-10 and apply preprocessing
-#(x_train_full, y_train_full), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
-(x_train_full, y_train_full), (x_test, y_test) = tf.keras.datasets.mnist.load_data()  # Uncomment if using MNIST
+(x_train_full, y_train_full), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
+#(x_train_full, y_train_full), (x_test, y_test) = tf.keras.datasets.mnist.load_data()  # Uncomment if using MNIST
 
 # Normalize pixel values
 x_train_full = x_train_full.astype("float32") / 255.0
@@ -50,14 +50,14 @@ ensemble = []
     for i in range(5)
 ]"""
 # or for MNIST
-ensemble = [
+"""ensemble = [
     load_bnn_model(f"Ensemble_Member_{i+1}_MNIST", len_x_train=len(x_train_full))
     for i in range(5)
-]
+]"""
 
 #%% Train DE-BNN
 
-# ensemble = train_deep_ensemble(x_train, y_train, x_val, y_val, input_shape, num_classes, epochs = 10, n_models=5)
+ensemble = train_deep_ensemble(x_train, y_train, x_val, y_val, input_shape, num_classes, epochs = 20, n_models=5)
 
 # 1. Instantiate your model
 single_bnn = ConvolutionalBNN(
@@ -72,11 +72,11 @@ single_bnn = ConvolutionalBNN(
 single_bnn.compile()
 
 # 3. Train the model
-single_bnn.fit(
+history = single_bnn.fit(
     x_train,
     y_train,
     validation_data=(x_val, y_val),
-    epochs=50,         # or any desired number of epochs
+    epochs=100,         # or any desired number of epochs
     batch_size=64,    # or any suitable batch size
     verbose=1
 )
@@ -114,12 +114,12 @@ for k in range(1, len(ensemble) + 1):
 df_ensemble_metrics = pd.DataFrame(results_per_size)
 print(df_ensemble_metrics)
 
-plots = plot_ensemble_metrics(df_ensemble_metrics, evaluate_model(y_test, y_proba_single, num_classes=10) , mnist=True)
+plots = plot_ensemble_metrics(df_ensemble_metrics, evaluate_model(y_test, y_proba_single, num_classes=10) , mnist=False)
 
 save_plots(plots, output_dir="plots/Saved_Plots/Plots_fair_comparison")
 
 #Train/Val/Test Accuracy plot
-num_epochs = 50
+num_epochs = 100
 batch_size = 64
 
 train_accs = []
@@ -168,12 +168,12 @@ plt.show()
 all_acc_single = [
     (fig, "all_acc_single_bnn", ".png")   # Dateiname: learning_curve_single_bnn.png
 ]
-save_plots(all_acc_single, output_dir="plots/Saved_Plots/Plots_fair_comparison")
+"""save_plots(all_acc_single, output_dir="plots/Saved_Plots/Plots_fair_comparison")"""
 
-save_bnn_model(single_bnn, "Single_Model_MNIST")
+"""save_bnn_model(single_bnn, "Single_Model_CIFAR10")
 
-"""save_bnn_model(ensemble[0], "Ensemble_Member_1_MNIST")
-save_bnn_model(ensemble[1], "Ensemble_Member_2_MNIST")
-save_bnn_model(ensemble[2], "Ensemble_Member_3_MNIST")
-save_bnn_model(ensemble[3], "Ensemble_Member_4_MNIST")
-save_bnn_model(ensemble[4], "Ensemble_Member_5_MNIST")"""
+save_bnn_model(ensemble[0], "Ensemble_Member_1_CIFAR10")
+save_bnn_model(ensemble[1], "Ensemble_Member_2_CIFAR10")
+save_bnn_model(ensemble[2], "Ensemble_Member_3_CIFAR10")
+save_bnn_model(ensemble[3], "Ensemble_Member_4_CIFAR10")
+save_bnn_model(ensemble[4], "Ensemble_Member_5_CIFAR10")"""

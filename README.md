@@ -50,7 +50,7 @@ Seminar Deep Ensembles/
 │   ├── Plots_main.py
 │   └── Plots_MNIST.py
 ├── Saved_Models/
-│   └── [ensemble member subfolders with .h5 weights and .json metadata files]
+│   └── [ensemble member subfolders with .h5 weights and .json metadata files (only for the standard results)]
 ├── .gitignore
 ├── README.md
 ├── requirements.txt
