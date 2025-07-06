@@ -153,7 +153,7 @@ ax.set_ylabel('Accuracy')
 ax.set_title('Learning Curve (Train/Val/Test)', fontweight='bold')
 
 ax.set_xlim(0, 50)
-ax.set_ylim(0.8, 1.0)
+ax.set_ylim(0.85, 1.0)
 
 ax.yaxis.set_major_formatter(mtick.PercentFormatter(xmax=1.0, decimals=0))
 ax.set_xticks(np.arange(0, 51, 5))
