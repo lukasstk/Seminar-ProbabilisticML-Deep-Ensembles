@@ -92,3 +92,19 @@ def evaluate_model(y_true, y_proba, num_classes=10):
         "Predictive Entropy": entropy_val,
         "ECE": ece_val
     }
+
+class TestAccCB(tfk.callbacks.Callback):
+    def __init__(self, x_test, y_test, index_to_label):
+        super().__init__()
+        self.x_test = x_test
+        self.y_test = y_test
+        self.index_to_label = index_to_label
+        self.scores = []
+    def on_epoch_end(self, epoch, logs=None):
+        logits = self.model(self.x_test, training=False).numpy()  # <-- das ist korrekt!
+        preds = np.argmax(logits, axis=1)
+        y_true = [self.index_to_label[int(i)] for i in self.y_test]
+        y_pred = [self.index_to_label[int(i)] for i in preds]
+        from sklearn.metrics import accuracy_score
+        acc = accuracy_score(y_true, y_pred)
+        self.scores.append(acc)

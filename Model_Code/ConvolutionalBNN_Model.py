@@ -135,7 +135,8 @@ class ConvolutionalBNN:
                 random_state = random.randint(0, 10_000_000)
             X_train, y_train = shuffle(X_train, y_train, random_state=random_state)
 
-        self.model.fit(X_train, y_train, validation_data=validation_data, verbose=verbose, **kwargs)
+        history = self.model.fit(X_train, y_train, validation_data=validation_data, verbose=verbose, **kwargs)
+        return history
 
     def predict_logits(self, X_test):
         """

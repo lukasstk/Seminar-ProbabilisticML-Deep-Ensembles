@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split
 import pandas as pd
 import matplotlib.pyplot as plt
 from Model_Code.Save_and_Load_Models import save_bnn_model, load_bnn_model
-from Model_Code.Ensemble_helper import train_deep_ensemble, evaluate_model, ensemble_predict_proba
+from Model_Code.Ensemble_helper import train_deep_ensemble, evaluate_model, ensemble_predict_proba, TestAccCB
 import matplotlib.ticker as mtick
 
 seed = 42
@@ -17,8 +17,8 @@ np.random.seed(seed)
 tf.random.set_seed(seed)
 
 #%% Load MNIST or CIFAR-10 and apply preprocessing
-(x_train_full, y_train_full), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
-#(x_train_full, y_train_full), (x_test, y_test) = tf.keras.datasets.mnist.load_data()  # Uncomment if using MNIST
+#(x_train_full, y_train_full), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
+(x_train_full, y_train_full), (x_test, y_test) = tf.keras.datasets.mnist.load_data()  # Uncomment if using MNIST
 
 # Normalize pixel values
 x_train_full = x_train_full.astype("float32") / 255.0
@@ -57,7 +57,7 @@ ensemble = []
 
 #%% Train DE-BNN
 
-ensemble = train_deep_ensemble(x_train, y_train, x_val, y_val, input_shape, num_classes, epochs = 20, n_models=5)
+ensemble = train_deep_ensemble(x_train, y_train, x_val, y_val, input_shape, num_classes, epochs = 10, n_models=5)
 
 # 1. Instantiate your model
 single_bnn = ConvolutionalBNN(
@@ -71,14 +71,30 @@ single_bnn = ConvolutionalBNN(
 # 2. Compile your model
 single_bnn.compile()
 
-# 3. Train the model
+# Dummy-Fit, damit Label-Mapping entsteht (einmal reicht)
+_ = single_bnn.fit(
+    x_train,
+    y_train,
+    epochs=1,
+    batch_size=64,
+    verbose=0
+)
+
+test_acc_cb = TestAccCB(
+    x_test=x_test,
+    y_test=y_test,
+    index_to_label=single_bnn.index_to_label
+)
+
+# 3. Jetzt Training mit Callback
 history = single_bnn.fit(
     x_train,
     y_train,
     validation_data=(x_val, y_val),
-    epochs=100,         # or any desired number of epochs
-    batch_size=64,    # or any suitable batch size
-    verbose=1
+    epochs=50,
+    batch_size=64,
+    verbose=1,
+    callbacks=[test_acc_cb]
 )
 
 #%% Evaluate both models
@@ -114,61 +130,45 @@ for k in range(1, len(ensemble) + 1):
 df_ensemble_metrics = pd.DataFrame(results_per_size)
 print(df_ensemble_metrics)
 
-plots = plot_ensemble_metrics(df_ensemble_metrics, evaluate_model(y_test, y_proba_single, num_classes=10) , mnist=False)
+plots = plot_ensemble_metrics(df_ensemble_metrics, evaluate_model(y_test, y_proba_single, num_classes=10) , mnist=True)
 
 save_plots(plots, output_dir="plots/Saved_Plots/Plots_fair_comparison")
 
 #Train/Val/Test Accuracy plot
-num_epochs = 100
-batch_size = 64
+epochs = range(1, len(history.history['accuracy']) + 1)
 
-train_accs = []
-val_accs = []
-test_accs = []
+train_accs = history.history['accuracy']
+val_accs = history.history['val_accuracy']
+test_accs = test_acc_cb.scores
+epochs = range(1, len(train_accs) + 1)
 
-for epoch in range(num_epochs):
-    # Accuracy on train, val, test
-    train_acc = single_bnn.evaluate_accuracy(x_train, y_train)
-    val_acc = single_bnn.evaluate_accuracy(x_val, y_val)
-    test_acc = single_bnn.evaluate_accuracy(x_test, y_test)
-
-    train_accs.append(train_acc)
-    val_accs.append(val_acc)
-    test_accs.append(test_acc)
-
-    print(f"Epoch {epoch + 1:02d}: Train={train_acc:.4f}  Val={val_acc:.4f}  Test={test_acc:.4f}")
-
-epochs = np.arange(1, num_epochs + 1)
 fig, ax = plt.subplots(figsize=(12, 6))
 
-ax.plot(epochs, train_accs, label='Train Accuracy', color = "dodgerblue")
-ax.plot(epochs, val_accs, label='Validation Accuracy', color = "darkorange")
-ax.plot(epochs, test_accs, label='Test Accuracy', color = "darkslategray")
+ax.plot(epochs, train_accs, label='Train Accuracy', color="dodgerblue")
+ax.plot(epochs, val_accs, label='Validation Accuracy', color="darkorange")
+ax.plot(epochs, test_accs, label='Test Accuracy', color="darkslategray")
 
 ax.set_xlabel('Epoch')
 ax.set_ylabel('Accuracy')
 ax.set_title('Learning Curve (Train/Val/Test)', fontweight='bold')
 
 ax.set_xlim(0, 50)
-ax.set_ylim(0.75, 0.96)  # Optional: set this tighter to your range, or use 0,1 for full percent scale
+ax.set_ylim(0.7, 1.0)
 
-# Format y-axis as percent
 ax.yaxis.set_major_formatter(mtick.PercentFormatter(xmax=1.0, decimals=0))
 ax.set_xticks(np.arange(0, 51, 5))
 
-# Bigger legend
 ax.legend(fontsize=16, loc='lower right')
-
 ax.grid(True)
 fig.tight_layout()
-
 apply_custom_theme(ax)
+
 plt.show()
 
 all_acc_single = [
     (fig, "all_acc_single_bnn", ".png")   # Dateiname: learning_curve_single_bnn.png
 ]
-"""save_plots(all_acc_single, output_dir="plots/Saved_Plots/Plots_fair_comparison")"""
+save_plots(all_acc_single, output_dir="plots/Saved_Plots/Plots_fair_comparison")
 
 """save_bnn_model(single_bnn, "Single_Model_CIFAR10")
 
